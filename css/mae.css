@@ -1,0 +1,17 @@
+div.slideshow {
+	border: solid 3px gray; /* optional */
+	background: url('images/load.gif') 50% 50% no-repeat #000; /* for the loading image */
+	width: 100px; /* same as images */
+	height: 100px; /* same as images */
+	line-height: 0; /* fix IE space below image */
+}
+div.slideshow img {
+	opacity: 0; /* So it doesn't show while loading */
+	filter: alpha(opacity=0); /* the same, for IE */
+}
+div#slide1DIV {
+	float: left;
+}
+div#slide2DIV {
+	float: right;
+}

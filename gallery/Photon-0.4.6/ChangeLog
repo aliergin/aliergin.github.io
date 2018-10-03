@@ -1,0 +1,40 @@
+2007-11-05  Luc Saillard <luc@saillard.org>
+
+	* Fix bugs
+	* Add compat for gimp-2.4
+	* Release 0.4.5
+
+2006-02-06  Luc Saillard <luc@saillard.org>
+
+	* Template support
+	* Mjpeg AVI
+	* Release 0.4.4
+
+2005-06-29  Luc Saillard <luc@saillard.org>
+
+	* Better support of Quicktime file
+	* Fix somes very old bugs
+	* Release 0.4.2
+
+2005-06-06  Luc Saillard <luc@saillard.org>
+
+	* Raw support (using dcraw)
+	* Fix HTML (to be w3c compliant)
+	* Small changes for Exif (Focal Lenght)
+	* Release 0.4.1
+
+2005-06-01  Luc Saillard <luc@saillard.org>
+
+	* Movie mode (some movie can now be displayed)
+	* Can add awstats Javascript code
+	* Better Exif Output
+	* Support for PNG and QuickTime (only jpeg)
+	* You can recompress a original image
+	* Directory can now have an image
+	* Release 0.4.0
+
+2004-06-08  Luc Saillard <luc@saillard.org>
+
+	* Fix missing image in web site 
+	* Release 0.3.1
+

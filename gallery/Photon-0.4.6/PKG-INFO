@@ -1,0 +1,22 @@
+Metadata-Version: 1.0
+Name: Photon
+Version: 0.4.6
+Summary: Photon is a static HTML gallery generator
+Home-page: http://www.saillard.org/photon/
+Author: Luc Saillard
+Author-email: luc@saillard.org
+License: GNU GPL v2
+Description: Photon is a photo album with a clean design.
+        Features:
+        * static HTML pages (you can put all pages and images on a CD-ROM)
+        * slideshow (use javascript optional)
+        * can use gimp to resize picture
+        * navigation between the image can use the keyboard (use javascript optional)
+        * works in any browser (Mozilla, Netscape Navigator 4.x, Konqueror, Opera)
+        * Each image can have a comment (with HTML tags)
+        * Information about the image (if taken from a digital picture) can be draw
+        * thumbnail image size can be choosen by the user
+        * output images can be scalled down
+        * movie support
+        * control the number of thumbnail in a page.
+Platform: UNKNOWN

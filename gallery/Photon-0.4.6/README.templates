@@ -1,0 +1,65 @@
+
+Engine: airspeed
+
+
+Create a new template for photon
+--------------------------------
+
+ o create a new folder in the template directory (~/.photon/templates or
+/usr/share/photon/templates). The folder need to have an unique name, else
+photon will use the version in your own HOME directory.
+   EX: mkdir -p ${HOME}/.photon/templates/my_sexy_theme/
+
+ o Photon needs only three files to build pages.
+
+     index.html
+	=> used to display the content on a folder
+     image.html
+	=> used to display the page for an image
+     movie.html
+	=> used to display the page for a movie
+
+   If a file is missing, photon produce an error, and will not run. You can
+create your own file from scratch, but I think it's easier to copy a default
+template, and modify them.
+
+   EX: vi ${HOME}/.photon/templates/my_sexy_theme/index.html
+       vi ${HOME}/.photon/templates/my_sexy_theme/image.html
+       vi ${HOME}/.photon/templates/my_sexy_theme/movie.html
+
+
+ o Each file can include others files to reused some common part between each
+page, but all files need to be in the current theme folder. The current theme
+"photonv1" used a common part between image.html and movie.html. Look at it, to
+see how to used it.
+
+ o Tell photon to use the template
+
+   EX: photon -k my_sexy_theme ...
+    or photon --skin my_sexy_theme ...
+
+Variables available for index.html:
+-----------------------------------
+
+  All options from the configuration file.
+    exif_bordercolor
+    exif_bgcolor
+    exif_fgcolor
+    body_bgcolor
+    img_bgcolor
+    awstats_script_url
+    theme
+    thumbsize_width
+    thumbsize_height
+
+  Global variables:
+    version: the current photon's version
+    title: Albums (for the root folder) or the current folder name
+    
+  Special variables:
+    navbar:
+
+  List variables:
+    row_images
+    row_dirs
+

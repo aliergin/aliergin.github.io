@@ -1,0 +1,61 @@
+Photon
+------
+
+http://saillard.org/photon
+
+
+Photon is a static HTML gallery generator.
+
+Features:
+
+ - static HTML pages (you can put all pages and images on a CD-ROM)
+ - slideshow (use javascript optional)
+ - can use gimp to resize picture 
+ - navigation between the image can use the keyboard (use javascript optional)
+ - works in any browser (Mozilla, Netscape Navigator 4.x, Konqueror, Opera)
+ - Each image can have a comment (with HTML tags)
+ - Information about the image (if taken from a digital picture) can be draw
+ - thumbnail image size can be choosen by the user
+ - output images can be scalled down
+ - control the number of thumbnail in a page
+ - movie support, to show a preview
+ - HTML template
+
+
+Requirement:
+
+To make the gallery
+ - python >=2.1 (see http://www.python.org)
+ - PIL (see http://www.pythonware.com/products/pil/)
+     It's the library use to load image, resize.
+     Debian users:
+        apt-get install python2.3-imaging (if you have a debian unstable)
+        apt-get install python2.2-imaging
+        apt-get install python2.1-imaging
+ - EXIF library (included in this package but optional)
+ - Gimp (optional)
+ - dcraw (optional)
+ - Some photos and free space disk
+
+To show the gallery
+ - a web browser
+ - a web browser with javascript enabled (optional)
+
+Licence:
+
+ Photon is released under the GNU General Public License v2 and can be used free of charge.
+
+
+How to build a gallery:
+
+ The quick start:
+   # photon -o myoutputdir /photos
+
+ Use the gimp plugin
+   # photon --resize-plugin=gimp -v -o myoutputdir /photos
+
+ Change the size for all images and the thumbnail keeping the original photo (0)
+   # photon --sizelist=0,1600x1200,800x600 --thumbsize=320x240 -o myoutputdir /photos
+
+ See photon --help for a list of switches
+

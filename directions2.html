@@ -1,0 +1,277 @@
+<html xmlns:st1 xmlns:o>
+	<head>
+		<title>Rutgers Winlab: About</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<link rel="stylesheet" href="../common/lab_css.css" type="text/css">
+		<style>
+<!--
+span.NormalWebChar
+	{color:black;
+	}
+-->
+</style>
+    <script src="http://maps.google.com/maps?file=api&v=1&key=ABQIAAAApto8LivKGnAXjxvT20awkBRFqdUNoU_AdlxTekRtqODwSW_kExQWpcufShCvhgRDEnI-TqOGkSz2Uw" type="text/javascript"></script>
+    <script type="text/javascript">
+    function initialize() {
+      if (GBrowserIsCompatible()) {
+        var map = new GMap2(document.getElementById("map_canvas"));
+//map.setCenter(new GLatLng(37.4419, -122.1419), 13)
+        map.setCenter(new GLatLng(40.468259,-74.445595), 13);
+        map.setUIToDefault();
+
+        // Create a base icon for all of our markers that specifies the
+        // shadow, icon dimensions, etc.
+        var baseIcon = new GIcon(G_DEFAULT_ICON);
+        baseIcon.shadow = "http://www.google.com/mapfiles/shadow50.png";
+        baseIcon.iconSize = new GSize(20, 34);
+        baseIcon.shadowSize = new GSize(37, 34);
+        baseIcon.iconAnchor = new GPoint(9, 34);
+        baseIcon.infoWindowAnchor = new GPoint(9, 2);
+
+        // Creates a marker whose info window displays the letter corresponding
+        // to the given index.
+        function createMarker(point, index) {
+          // Create a lettered icon for this point using our icon class
+
+  	  var letter = String.fromCharCode("A".charCodeAt(0) + index);
+  	  var letteredIcon = new GIcon(baseIcon);
+  	  letteredIcon.image = "http://www.google.com/mapfiles/marker" + "W" + ".png";
+
+          // Set up our GMarkerOptions object
+          markerOptions = { icon:letteredIcon };
+          var marker = new GMarker(point, markerOptions);
+
+          GEvent.addListener(marker, "click", function() {
+            marker.openInfoWindowHtml("<b>WINLAB</b>,<br/> Rutgers, The State University of New Jersey,<br/> Technology Centre of New Jersey,<br/> 671 Route 1 South, North Brunswick,<br/> N.J. 08902-3390, COOK CAMPUS,<br/> Phone: 732- 932- 6857 Ext. 614<br/> Fax: 732- 932- 6882");
+          });
+          return marker;
+        }
+
+          var latlng = new GLatLng(40.468259,-74.445595);
+          map.addOverlay(createMarker(latlng, 0));
+        }
+    }
+    </script>
+
+	</head>
+	<body onload="initialize()" onunload="GUnload()" bgcolor="#ffffff" text="#000000" link="#666666" vlink="#666666">
+		<a name="top"></a>
+		<table width="100%" border="0" cellspacing="0" cellpadding="1">
+			<tr>
+				<td bgcolor="#ffffff">
+					<table width="100%" border="0" cellspacing="0" cellpadding="0">
+						<tr>
+							<td width="100" bgcolor="#eeecec">
+								<table width="50" border="0" cellspacing="1" cellpadding="1">
+									<tr>
+										<td bgcolor="#eeecec">
+											<img src="../common/images/shared/clearbox.gif" width="10" height="10"></td>
+										<td>
+											<table width="143" border="0" cellspacing="1" cellpadding="1">
+												<tr>
+													<td bgcolor="#666666" height="121">
+														<table width="11%" border="0" cellspacing="0" cellpadding="0">
+															<tr>
+																<td bgcolor="#ffffff" width="52%" valign="top"><a href="directions2.html"> <img src="../common/images/shared/nav_a.gif" border="0" width="56" height="12"></a></td>
+																<td bgcolor="#ffffff" width="40%" valign="top"><a href="contact.html"> <img src="../common/images/shared/nav-b.gif" border="0" width="45" height="12"></a></td>
+																<td bgcolor="#ffffff" width="8%">&nbsp;</td>
+															</tr>
+															<tr bgcolor="#ffffff">
+																<td bgcolor="#ffffff" colspan="2"><a href="../Index.html"> <img src="../common/images/shared/nav1.gif" border="0" width="130" height="17"></a><br>
+																	<img src="../common/images/shared/spacer.gif" width="125" height="2"></td>
+																<td width="8%">&nbsp;</td>
+															</tr>
+															<tr bgcolor="#ffffff">
+																<td bgcolor="#ffffff" colspan="2"><a href="about/about.html"> <img src="../common/images/shared/nav2.gif" border="0" width="130" height="17"></a><br>
+																	<img src="../common/images/shared/spacer.gif" width="125" height="2"></td>
+																<td bgcolor="#0099ff" width="8%">
+																	<img src="../common/images/shared/clearbox.gif" width="10" height="10"></td>
+															</tr>
+															<tr bgcolor="#ffffff">
+																<td bgcolor="#ffffff" colspan="2"><a href="research/research.html"> <img src="../common/images/shared/nav3.gif" border="0" width="130" height="17"></a><br>
+																	<img src="../common/images/shared/spacer.gif" width="125" height="2"></td>
+																<td width="8%">&nbsp;</td>
+															</tr>
+															<tr bgcolor="#ffffff">
+																<td bgcolor="#ffffff" colspan="2"><a href="focus/Index.html"> <img src="../common/images/shared/nav4.gif" border="0" width="130" height="17"></a><br>
+																	<img src="../common/images/shared/spacer.gif" width="125" height="2"></td>
+																<td width="8%">&nbsp;</td>
+															</tr>
+															<tr bgcolor="#ffffff">
+																<td bgcolor="#ffffff" colspan="2"><a href="faculty/Index.html"> <img src="../common/images/shared/nav5.gif" border="0" width="130" height="17"></a><br>
+																	<img src="../common/images/shared/spacer.gif" width="125" height="2"></td>
+																<td width="8%">&nbsp;</td>
+															</tr>
+															<tr bgcolor="#ffffff">
+																<td bgcolor="#ffffff" colspan="2"><a href="sponsorship/sponsorship.html"> <img src="../common/images/shared/nav6.gif" border="0" width="130" height="17"></a></td>
+																<td width="8%">&nbsp;</td>
+															</tr>
+														</table>
+													</td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+								</table>
+							</td>
+							<td bgcolor="#eeecec" valign="top" width="100%">
+								<div align="right"><img src="../common/images/shared/clearbox.gif" width="340" height="10"><img src="../common/images/about/ab_hdgfk.jpg" width="252" height="142"></div>
+							</td>
+						</tr>
+						<tr bgcolor="#ffffff">
+							<td bgcolor="#eeecec"><span class="smalltype"><img src="../common/images/shared/clearbox.gif" width="167" height="15"></span></td>
+							<td>
+								<table width="100%" border="0" cellspacing="1" cellpadding="1">
+									<tr>
+										<td bgcolor="#666666">
+											<table width="100%" border="0" cellspacing="0" cellpadding="0">
+												<tr>
+													<td bgcolor="#f5f4f4">
+														<div align="left">
+															<img src="../common/images/about/ab_hdr.gif" width="159" height="30"></div>
+													</td>
+													<td bgcolor="#f5f4f4">
+														<div align="right"><img src="../common/images/about/ab_hdgfk2.jpg" width="252" height="30"></div>
+													</td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr bgcolor="#ffffff">
+							<td bgcolor="#cccccc">&nbsp;</td>
+							<td bgcolor="#cccccc">&nbsp;</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		<br>
+		<table width="100%" border="0" cellspacing="1" cellpadding="1">
+			<tr>
+				<td bgcolor="#999999">
+					<table width="100%" border="0" cellspacing="1" cellpadding="7">
+						<tr>
+							<td width="150" valign="top" class="smalltype" bgcolor="#ffffff"><span class="smalltype"><img src="../common/images/shared/clearbox.gif" width="150" height="10"></span>
+							</td>
+							<td bgcolor="#ffffff" width="100%" valign="top"> <!-- #BeginEditable "main_content" -->
+								<p align="center"><font face="Arial" style="FONT-SIZE: 9pt" size="2"><span class="content_header">
+            DIRECTIONS TO WINLAB</span></font></p>
+								<p align="center">						
+<span class="lab_css">
+<div align="center" id="map_canvas" style="width: 600px; height: 300px"></div>
+</span>
+    
+	</p>									<H3><FONT size="2"><SPAN class="maincss"><U><SPAN style="FONT-SIZE: 9pt; FONT-FAMILY: Arial; mso-bidi-font-size: 13.5pt; mso-bidi-font-family: 'Times New Roman'">Directions 
+            from</SPAN></U></SPAN><FONT face="Arial"><U> New Jersey Turnpike 
+									(North and South), Newark Airport and New 
+									York City</U></FONT><SPAN class="maincss"><U><SPAN style="FONT-SIZE: 9pt; FONT-FAMILY: Arial">:<BR></SPAN></U></SPAN><SPAN class="NormalWebChar">
+									<SPAN style="FONT-WEIGHT: 400; FONT-SIZE: 9pt; FONT-FAMILY: Arial; mso-bidi-font-size: 12.0pt; mso-bidi-font-family: 'Times New Roman'">
+									Take </SPAN>
+											</SPAN></FONT>
+									<span style="font-weight: 400">
+									<span class="NormalWebChar">
+									<span style="font-size: 9.0pt; font-family: Arial">
+									the New Jersey Turnpike to Exit 9. As you 
+									exit the Turnpike, take Route 18 North to 
+									Route 1 South. Take Route 1 South 
+									approximately 1.5 miles and follow the signs 
+									for the Technology Centre of New Jersey 
+									(just past Bristol-Myers Squibb). Turn right 
+									into the Technology Centre and follow the 
+									road around to the left. After the stop 
+									sign, the road then curves around to the 
+									right and the Chubbs building will be on 
+									your right. Continue until you can't go any 
+									further. Make a right and go to the next 
+									driveway on the left into the parking lot 
+									for Building 671 (Yellow Trim). Parking 
+									permits are NOT required for this parking
+									</span></span></span><FONT size="2">
+									<SPAN class="NormalWebChar">
+									<SPAN style="FONT-WEIGHT: 400; FONT-SIZE: 9pt; FONT-FAMILY: Arial; mso-bidi-font-size: 12.0pt; mso-bidi-font-family: 'Times New Roman'">area. 
+<o:p></o:p></SPAN>
+											</SPAN></FONT></H3>
+											<H3><FONT size="2"><SPAN class="maincss"><U><SPAN style="FONT-SIZE: 9pt; FONT-FAMILY: Arial; mso-bidi-font-size: 13.5pt; mso-bidi-font-family: 'Times New Roman'">Directions 
+            from</SPAN></U></SPAN><FONT face="Arial"><U> </U>
+												<SPAN class="labcss1">
+													<U>
+														<SPAN style="FONT-SIZE: 9pt">the Princeton 
+            Area</SPAN></U></SPAN></FONT></FONT><FONT size="2"><SPAN class="maincss"><U><SPAN style="FONT-SIZE: 9pt; FONT-FAMILY: Arial"> 
+            (South of 
+<st1:place w:st="on">
+															<st1:State w:st="on">New 
+            Brunswick</st1:State>
+														</st1:place> on Route 
+            1):<BR></SPAN></U></SPAN><SPAN class="NormalWebChar"><SPAN style="FONT-WEIGHT: normal; FONT-SIZE: 9pt; FONT-FAMILY: Arial; mso-bidi-font-size: 12.0pt; mso-bidi-font-family: 'Times New Roman'">Take 
+            Route 1 North. Once you pass the Milltown Road Exit watch for signs 
+            to the Technology Centre of New Jersey. It will appear as though you 
+            are entering the driveway for DeVry University. You will follow the 
+            road around to the left to the end, make a left and go under Route 1 
+            to enter the Technology Centre parking areas. Follow signs for 
+            Rutgers Tech Center II. Go to Building 671 (Yellow Trim).<SPAN style="mso-spacerun: yes">&nbsp; </SPAN>Parking permits are NOT 
+            required for this parking area. 
+<o:p></o:p></SPAN>
+											</SPAN></FONT></H3>
+									<H3><FONT size="2"><SPAN class="maincss"><U><SPAN style="FONT-SIZE: 9pt; FONT-FAMILY: Arial; mso-bidi-font-size: 13.5pt; mso-bidi-font-family: 'Times New Roman'">Directions 
+            from I-287:<BR></SPAN></U></SPAN><SPAN class="NormalWebChar"><SPAN style="FONT-WEIGHT: normal; FONT-SIZE: 9pt; FONT-FAMILY: Arial; mso-bidi-font-size: 12.0pt; mso-bidi-font-family: 'Times New Roman'">Take 
+            exit for Route 1 South. When you pass the entrance to Cook College, 
+            watch for signs for the Technology Centre of New Jersey (just past 
+            Bristol-Myers Squibb).<SPAN style="mso-spacerun: yes">&nbsp; 
+            </SPAN>Turn right into the Technology Centre and follow the road 
+            around to the left. After the stop sign, the road then curves around 
+            to the right and the Chubbs building will be on your right. Continue 
+            until you can't go any further. Make a right and go to the next 
+            driveway on the left into the parking lot for Building 671 (Yellow 
+            Trim). <SPAN style="mso-spacerun: yes">&nbsp;</SPAN>Parking permits 
+            are NOT required for this parking 
+            area.
+<o:p></o:p></SPAN>
+											</SPAN></FONT></H3>
+									<H3><FONT size="2"><SPAN class="maincss"><U><SPAN style="FONT-SIZE: 9pt; FONT-FAMILY: Arial; mso-bidi-font-size: 13.5pt; mso-bidi-font-family: 'Times New Roman'">Directions 
+            from Route 18:<BR></SPAN></U></SPAN><SPAN class="NormalWebChar"><SPAN style="FONT-WEIGHT: normal; FONT-SIZE: 9pt; FONT-FAMILY: Arial; mso-bidi-font-size: 12.0pt; mso-bidi-font-family: 'Times New Roman'">Take 
+            Route 18 North to Route 1 South. Take Route 1 South approximately 
+            1.5 miles and follow signs for the Technology Centre of New Jersey 
+            (just past Bristol-Myers Squibb). Turn right into the Technology 
+            Centre and follow the road around to the left. After the stop sign, 
+            the road then curves around to the right and the Chubbs building 
+            will be on your right. <SPAN style="mso-spacerun: yes">&nbsp;</SPAN>Continue until you can't go 
+            any further. Make a right and go to the next driveway on the left 
+            into the parking lot for Building 671 (Yellow Trim).<SPAN style="mso-spacerun: yes">&nbsp; </SPAN>Parking permits are NOT 
+            required for this parking area.
+<o:p></o:p></SPAN>
+											</SPAN></FONT></H3>
+									<P align="left"><br>
+								</span> <!-- #EndEditable -->
+								<p align="left"><img src="../common/images/shared/clearbox.gif" width="360" height="10"></p>
+							</td>
+							<td bgcolor="#ffffff" width="200" valign="top" class="lab_css">
+								<table width="50" border="0" cellspacing="0" cellpadding="1">
+									<tr>
+										<td><span class="side_content">
+												<img src="../common/images/shared/s-img-cell.jpg" width="200" height="93"></span></td>
+									</tr>
+								</table>
+								<img src="../common/images/shared/clearbox.gif" width="200" height="10"><p align="right">
+									<font style="FONT-WEIGHT: 700; FONT-SIZE: 9pt">
+										<br>
+									</font>&nbsp;</p>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		<div align="center" class="lab_css"><br>
+		</div>
+		<p align="center" class="side_content"><span class="smalltype"><a href="../Index.html">HOME</a><b>
+					|</b> <a href="about/about.html">ABOUT WINLAB</a><b> |</b> <a href="research/research.html">
+					WINLAB RESEARCH</a><b> |</b> <a href="focus/Index.html">FOCUS PROJECTS</a> <b>|</b>
+				<a href="faculty/Index.html">FACULTY</a><b> |</b> <a href="sponsorship/sponsorship.html">
+					SPONSORSHIP</a></span><span class="lab_css"><br>
+			</span><span class="legal">Copyright © 2004-2007 WINLAB, Rutgers University</span></p>
+		<p align="center" class="side_content">&nbsp;</p>
+	</body>
+</html>

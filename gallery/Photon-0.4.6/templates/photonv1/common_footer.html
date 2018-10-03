@@ -1,0 +1,66 @@
+    <table border="0" width="100%">
+    <tr>
+      <td valign="top">
+	## Left img
+	<table border="0"><tr><td valign="top" width="$thumbsize_width">
+	  #if ($previous_image)
+	    <a href="$previous_image.page" accesskey="p">&lt;-Prev</a><br><table border="0"><tr><td bgcolor="black"><a href="$previous_image.page"><img align="middle" hspace="2" vspace="2" border="0" src="$previous_image.thumbimg" alt="$previous_image.filename" /></a></td></tr></table>
+	  #else
+	    <img width="$thumbsize_width" height="1" src="blank.gif" alt="" />
+	  #end
+	</td></tr></table>
+      </td>
+
+      <td valign="top" align="center">
+	## Toolbar and Sizelist
+	<img class="toolbar" id="fullscreenicon" src="fullscreen.png" title="show this image in fullscreen" alt="fullscreen" align="middle" width="16" height="16" hspace="8"  onclick="toggle_fullscreen()" />
+	#if ($exif)
+	  <img class="toolbar" id="infoicon" src="info.png" title="show image's information" alt="info" align="middle" width="16" height="16" hspace="8" onclick="toggle_exif_window()" />
+	#end
+	<img class="toolbar" id="helpicon" src="help.png" title="show quick help/shorcuts" alt="help" align="middle" width="16" height="16" hspace="8" onclick="toggle_help_layer()" />
+	<img class="toolbar" id="slideicon" src="player_play.png" title="start the slideshow" alt="start slideshow" align="middle" width="16" height="16" hspace="8"  onclick="toggle_slideshow()" />
+	<br>
+
+	#if ($movie_filename)
+	  ## MOVIE mode
+	    Download the movie:<br>
+	    <a href="$movie_link" accesskey="m"><img src="filesave.png" width="16" height="16" border="0" align="bottom" alt="" /> $movie_filename</a><br>
+	    Others preview:<br>
+	    #foreach ($res in $movie_sizelist)
+	    <a href="$res.pageurl" accesskey="$res.accesskey">$res.frames_per_width x $res.frames_per_height</a><br>
+	    #end
+
+	#else
+	  ## IMAGE mode
+	  #if ($img_is_raw)
+	    Download the raw file:<br>
+	    <a href="$img_raw_link" accesskey="r"><img src="filesave.png" width="16" height="16" border="0" align="bottom" alt="" /> $img_raw_filename</a><br>
+	  #end
+	  Others sizes:<br>
+	  #if ($img_sizelist)
+	    #foreach ($res in $img_sizelist)
+	    <a href="$res.imgurl"><img src="filesave.png" width="16" height="16" border="0" align="bottom" alt="" /></a><a href="$res.pageurl" #if ($res.accesskey)accesskey="$res.accesskey"#end>$res.size</a><br>
+	    #end
+	  #else
+	   None
+	  #end
+
+	#end
+      </td>
+
+      <td valign="top" align="right">
+
+	## Right img
+	<table border="0"><tr><td valign="top" align="right" width="$thumbsize_width">
+	  #if ($next_image)
+	    <a href="$next_image.page" accesskey="n">Next -&gt;</a><br><table border="0"><tr><td bgcolor="black"><a href="$next_image.page"><img align="middle" hspace="2" vspace="2" border="0" src="$next_image.thumbimg" alt="$next_image.filename" /></a></td></tr></table>
+	  #else
+	    <img width="$thumbsize_width" height="1" src="blank.gif" alt="" />
+	  #end
+	</td></tr></table>
+
+      </td>
+
+    </tr>
+  </table>
+

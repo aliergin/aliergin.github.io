@@ -1,0 +1,108 @@
+#*
+This file is a template for Photon for the index%d.html pages.
+*#
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Mesut Ali Ergin - Personal / Picture Gallery</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=$charset">
+  <meta content="Mesut Ali Ergin" name="author">
+  <meta content="Mesut Ali Ergin - Personal / Picture Gallery" name="description">
+
+  #if ($previous_link)<link rel="prev" href="$previous_link"> #end
+  #if ($next_link)<link rel="next" href="$next_link"> #end
+  #if ($awstats_script_url)<script type="text/javascript" src="$awstats_script_url"></script> #end
+</head>
+<body>
+<div align="center"  style="font-family: Verdana;">
+<div style="text-align: left;"><a href="../index.html"><img
+ style="border: 0px solid ; width: 200px; height: 24px;"
+ alt="Back to main page" src="../../../images/TEXT_backtomain.png"></a></div>
+<img style="width: 395px; height: 77px;" alt="Mesut Ali Ergin"
+ src="../../../images/TEXT_mesutaliergin.png">
+<h1 style="font-family: Verdana; text-align: center;"><img
+ style="width: 290px; height: 40px;"
+ alt="mysurname at winlab dot rutgers dot edu"
+ src="../../../images/TEXT_email.png"><br>
+</h1>
+
+<table  style="width: 75%; text-align: left; margin-left: auto; margin-right: auto;"
+ border="2" cellpadding="0" cellspacing="0"
+bgcolor="white">
+    <tr style="font-family: Helvetica,Arial,sans-serif;"
+ align="center">
+      <td style="background-color: rgb(0, 0, 0);"><big><big><span
+ style="color: rgb(255, 255, 255); font-family: Verdana; font-weight: bold; font-style: italic;">$navbar</span></big></big></td>
+    </tr>
+    <tr>
+      <td align="center">
+      <table
+ style="width: 90%; text-align: left; margin-left: auto; margin-right: auto;"
+ border="0" cellpadding="0" cellspacing="0" align="center">
+        <tbody>
+          <tr>
+            <td></td>
+          </tr>
+          <tr style="font-family: Verdana;"><br>
+            <td><small>Enjoy my photograps in the gallery! Please respect the Copyrights and contact me if you'd like to use them for any purpose. I've generated this gallery using <a href="http://www.saillard.org/photon/">Photon $version</a></small><br>
+            <br>
+            <br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </td>
+    </tr>
+
+<tr align="center">
+ <td><br>
+  <table width="100%" cellpadding="4" align="center">
+    #foreach($row in $row_dirs)
+    <tr align="center" bgcolor="$img_bgcolor">
+      #foreach($case in $row)
+	#if ($case.type == 'normal')
+          <td align="center"><a href="$case.url/index.html"><b>$case.name</b></a><br><img width="$thumbsize_width" height="1" src="blank.gif" alt=""></td>
+	#elseif ($case.type == 'ext')
+	  <td valign="bottom" align="center"><a href="$case.url/index.html"><img width="$case.thumbsize_width" height="$case.thumbsize_height" src="$case.thumb_url" alt="$case.thumb_name"></a><br><a href="$case.url/index.html"><b>$case.name</b></a></td>
+	#elseif ($case.type == 'blank')
+          <td><img width="50" height="1" src="blank.gif" alt=""></td>
+	#end
+      #end
+    </tr>
+    #end
+    #foreach($row in $row_images)
+    <tr bgcolor="$img_bgcolor">
+      #foreach($case in $row)
+	#if ($case.type == 'movie')
+      <td valign="bottom" align="center"><table border="0"><tr><td bgcolor="black"><table border="0" cellpadding="0"><tr><td><img border="0" src="filmholes-big-left.png" width="15" height="$case.thumbsize_height" align="top" alt=""/></td><td><a href="$case.img_html_url"><img border="0" src="$case.img_url" alt="$case.name" width="$case.thumbsize_width" height="$case.thumbsize_height" /></a></td><td><img border=0 src="filmholes-big-right.png" width="15" height="$case.thumbsize_height" align="top" alt=""/></td></tr></table></td></tr></table><br><a href="$case.img_html_url"> $case.name </a></td>
+	#elseif ($case.type == 'img')
+      <td valign="bottom" align="center"><table border="0"><tr><td bgcolor="black"><a href="$case.img_html_url"><img hspace="3" vspace="3" border="0" src="$case.img_url" alt="$case.name" width="$case.thumbsize_width" height="$case.thumbsize_height"></a></td></tr></table><br><a href="$case.img_html_url"> $case.comments </a></td>
+	#elseif ($case.type == 'blank')
+      <td><img width="$thumbsize_width" height="1" src="blank.gif" alt=""></td>
+	#end
+      #end
+    </tr>
+    #end
+    <tr bgcolor="$img_bgcolor">
+      <td colspan="$display_columns"><table border="0" width="100%"><tr><br>
+            #if ($total_images <= 3) &nbsp;
+            #else
+	      <td align=right>#if ($page_index == 0)Start | Prev $items_per_page | #elseif ($page_index == 1) <a href="index.html">Start</a> | <a href="index.html">Prev $items_per_page</a> | #else <a href="index.html">Start</a> | <a href="index${previous_page_index}.html">Prev $items_per_page</a> | #end #if ($page_index<$max_pages) <a href="index${next_page_index}.html">Next $items_per_page</a> | <a href="index${max_pages}.html">End</a>#else Next $items_per_page | End#end </td>
+            #end
+	    <td align=right>#if ($total_images <= 3) &nbsp; #else Images $images_processed to $max_images_displayed of $total_images #end </td>
+	  </tr>
+	</table>
+      </td>
+    </tr>
+  </table>
+ </td>
+</tr>
+</table>
+<div style="text-align: center; font-family: Verdana;"><br>
+<address><img style="width: 342px; height: 32px;"
+ alt="All rights reserved. Copyright 2007."
+ src="../../../images/TEXT_copyright.png"></address>
+</div>
+</div>
+</body>
+</html>

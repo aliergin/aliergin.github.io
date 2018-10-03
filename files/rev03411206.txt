@@ -1,0 +1,91 @@
+In this article, authors study an adaptive sampling rate algorithm for
+localization. Specifically, authors consider mobile nodes that are to be
+detected when they cross a boundary (i.e. travel in and out of critical
+areas) and they propose an algorithm to optimize power consumption and
+location-error by doing mobility-aware adaptation of location messaging
+frequency. Some NS-2 simulations and experiments with Cricket & MicaZ
+motes have been conducted to justify energy savings due to the use of
+their algorithm. For the scenarios tested, significant energy
+consumption and error reductions are claimed.
+
+Positioning of the paper as a generally applicable localization
+optimization, and the depth of the validation/evaluation process
+prevents this article to be accepted for publication as is. However, the
+value of the contribution for specific localization applications is
+still considerably high, hence, a major revision would make article
+suitable for publication.
+
+
+*Major issues to be addressed:*
+
+- The article has been positioned to propose a solution that can work
+with any localization system transparent from applications. However the
+adaptive algorithm presented seems applicable mostly to systems where
+there is a need for accurately detecting certain boundary crossings by
+the nodes. Also article has considered only a single localization
+approach in which the reference nodes (e.g., infrastructure) beacon and
+the target nodes do the localization (as opposed to infrastructure
+localizing the nodes). The article needs revising to better reflect the
+target it aims.
+
+- The presented results suggest that, no significant gains can be
+achieved by using the proposed adaptive scheme, if an average
+localization error of 30cm (or more) can be tolerated. Hence the reader
+should clearly be informed/motivated about the real need (if any) for
+that much of accuracy in typical applications.
+
+- Dependency of the generic conclusions drawn in the paper (i.e. energy
+savings and error reductions) to the specific scenarios simulated
+remains largely unanswered. E.g., simulated setup allows for many
+instances of boundary crossing events. Would this be the case for a
+typical application (like the jewelery example given in the intro)? In
+other words, would the energy consumption difference between 'optimal
+fixed-rate sampling' and 'adaptive sampling' diminish as we simulate a
+different size network with different mobility patters?
+
+
+*Detailed comments:*
+
+- Application transparency has been claimed in the introduction,
+however, the same applications are expected to provide the critical
+parameters of the proposed algorithm (i.e., upper and lower bound
+parameters) depending on their needs. Ideally the needs of the
+application can only be provided in terms of the QoLS (as the authors
+defined it), e.g., max. tolerable localization error, or max. tolerable
+delay in boundary crossing notification. Conversion to internal
+parameters must be invisible to the application. Article should be
+enhanced to address this issue.
+
+
+- Earlier work on providing relative updates (through use of gyroscopes and/or accelerometers) to augment absolute and infrequent location messaging has similar power savings objectives. A comparison of the proposed approach with this earlier approach is needed.
+
+- There are no details as to how the proposed method would work in networks with multi-hops and multiple-targets. Scalability and fault tolerance issues deserve a discussion along these lines.
+
+- The loss in accuracy (and power savings) due to the modeling simplification made in Figure 2 is not discussed.
+
+- Authors point out the power savings due to synchronized sleep-wakeups in Section III.B. However, its not clear from the text whether this method has been used in the evaluations or not. If used, the interaction of the actual data traffic on the network (not localization-related) with this sleep-wakeup mechanism needs to be explained.
+
+- For the simulation results in Fig.4, more data should be added for adaptive upper-bound line to make a reasonable comparison between the three cases. Also for Fig.3, fix rate line should be plotted by using increased number of points, especially in [0, 0.3m] range, since the tendency of the fix rate performance in that region is very important.
+
+- Authors should consider reading, citing and comparing the optimization approach explained in the following paper, as both works have common points (i.e., optimizing message generation for location information using mobility information of the node):
+
+@ARTICLE{DREAM,
+ author = {S. BASAGNI and I. CHLAMTAC and V. R. SYROTIUK and B. A. WOODWARD},
+ title = {Distance Routing Effect Algorithm for Mobility (DREAM).},
+ journal = {In Proc. ACM/IEEE Mobicom},
+ pages = {76-84},
+ year = {1998}
+}
+
+- Authors should consider revising the related work section to cite proper papers as they explain different approaches. E.g., a full column of related work text only uses two citations in the current form.
+- Authors need to give exact figures for the "short distance" they referred to multiple-times in Section III.D
+
+- Power consumption results from simulations and experiments are not directly comparable. Authors can add "number of communicated messages" information to both the experiment and simulation results to ease up comparison.
+
+- No information on the statistical significance of the data presented in the article are provided. Without this information, making comparisons from the plots are of little value. Authors should provide std.dev, variance and confidence interval (as applicable) information for the results from their multiple simulation and experiment runs.
+
+- On a minor note, enemy tanks crossing the border example as given in the introduction do not fully match what authors try to address in the paper. I.e., enemy tanks won't have cooperative nodes on them to help us locate them better.
+
+- The robot experiments outlined in Section IV raises some questions. Authors might consider explaining the extra information they will get from these expeiments since they already have incorporated accurate error-prone localization information into the simulation (authors chose to simulate power consumption for the robot anyways). Also, accuracy of the measurements-by-hand for the robot location (when the alarm sounds) deserves an explanation, especially since the errors reported are on the orders of 10cm.
+
+

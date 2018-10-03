@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist version="0" xmlns="http://xspf.org/ns/0/">
+
+<title> The fish is calling you...</title>
+ <trackList>
+  <track>
+    <location>http://www.winlab.rutgers.edu/~ergin/files/yey.mp3</location>
+    <image>http://www.winlab.rutgers.edu/~ergin/files/gpi_proc_small.jpg</image>
+    <annotation>istavrit - Ya Evde Yoksan</annotation>
+    <info>http://istavritistanbul.com</info>
+  </track>
+  <track>
+    <location>http://www.winlab.rutgers.edu/~ergin/files/rg-tmpmix1.mp3</location>
+    <image>http://www.winlab.rutgers.edu/~ergin/files/gpi_proc_small.jpg</image>
+    <annotation>istavrit - Resimdeki Gozyaslari</annotation>
+    <info>http://istavritistanbul.com</info>
+  </track>
+ </trackList>
+</playlist>

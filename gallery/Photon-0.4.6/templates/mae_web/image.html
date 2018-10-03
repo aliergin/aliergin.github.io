@@ -1,0 +1,108 @@
+#*
+This file is a template for Photon for the imageXXXX.html pages.
+*#
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=$charset">
+  <title>Mesut Ali Ergin - Personal / Picture Gallery</title>
+  <meta content="Mesut Ali Ergin" name="author">
+  <meta content="Mesut Ali Ergin - Personal / Picture Gallery"
+  #if ($awstats_script_url)<script type="text/javascript" src="$awstats_script_url"></script> #end
+  #if ($has_exif)<script type="text/javascript" language="JavaScript1.2" src="exif.js"></script> #end
+  #if ($javascript)<script type="text/javascript" language="JavaScript1.2" src="shortcuts.js"></script> #end
+#if ($previous_image)
+  <link id="previous_link" rel="prev" href="$previous_image.page">
+  <link id="previous_image" rel="prev" href="$previous_image.img">
+#end
+#if ($next_image)
+  <link id="next_link" rel="next" href="$next_image.page">
+  <link id="next_image" rel="next" href="$next_image.img">
+#end
+</head>
+<body bgcolor="white" #if ($on_load_script) onload="$on_load_script" #end>
+  <div align="center" style="font-family: Verdana;">
+<div style="text-align: left;"><a href="index.html"><img
+ style="border: 0px solid ;"
+ alt="Back to the gallery main page" src="../../../images/TEXT_back.png"></a></div>
+<img style="width: 395px; height: 77px;" alt="Mesut Ali Ergin"
+ src="../../../images/TEXT_mesutaliergin.png">
+<h1 style="font-family: Verdana; text-align: center;"><img
+ style="width: 290px; height: 40px;"
+ alt="mysurname at winlab dot rutgers dot edu"
+ src="../../../images/TEXT_email.png"><br>
+</h1>
+
+  <table bgcolor="white">
+  <tr>
+   <td>
+    <table width="100%" cellpadding="4">
+    <tr id="navbar" bgcolor="$img_bgcolor">
+      <td colspan="$display_columns">$navbar</td>
+    </tr>
+    <tr bgcolor="$img_bgcolor">
+      <td colspan="$display_columns"><center><table border="0"><tr><td bgcolor="black"><a name="image"></a><img hspace="3" vspace="3" border="0" src="$img_img_link" alt="$img_img_alt"></td></tr></table></center></td>
+    </tr>
+#if ($comments)
+    <tr bgcolor="$img_bgcolor">
+     <td colspan="$display_columns"><center>$comments</center></td>
+    </tr>
+#end
+    <tr bgcolor="$img_bgcolor">
+      <td colspan="$display_columns">
+	#parse ("common_footer.html")
+      </td>
+    </tr>
+    </table>
+   </td>
+  </tr>
+  </table>
+  </div>
+
+#if ($has_exif)
+<div id="exifwindow" style="visibility:hidden">
+  <table width="1%" bgcolor="$exif_bordercolor"><tr><td><table width="300" bgcolor="$exif_bgcolor"> <tr><td align="left" valign="middle"><table cellpadding=1 border=1 bgcolor="black">
+#foreach($prop in $list_of_exif_properties)
+    <tr class="lew">
+      <td nowrap><b>$prop.name</b></td>
+      <td nowrap>$prop.value $prop.unit</td>
+    </tr>
+#end
+  </table></td></tr>
+   <tr><td align="right" valign="bottom"><a href="" onclick="exif_hide(); return false;">Close this box</a></td></tr>
+  </table></td></tr></table>
+</div>
+#end
+
+#if ($javascript)
+  <div id="helpwindow" style="visibility:hidden">
+    <table width="1%" bgcolor="$exif_bordercolor"><tr><td><table width="500" bgcolor="$exif_bgcolor">
+     <tr><td align="center" valign="top">Shortcuts:</td></tr>
+     <tr><td align="left"><b>n/SPACE</b>: Go to the next image</td></tr>
+     <tr><td align="left"><b>p/BACKSPACE</b>: Go to the previous image</td></tr>
+     <tr><td align="left"><b>s</b>: Start/Stop the slideshow</td></tr>
+     <tr><td align="left"><b>+/-</b>: Increase/Decrease by one second the slideshow's period</td></tr>
+     <tr><td align="left"><b>i</b>: Show Exif information</td></tr>
+     <tr><td align="left"><b>h</b>: Show help</td></tr>
+     <tr><td align="left">To download the image, right-click on the disk icon</td></tr>
+     <tr><td align="right" valign="bottom"><a href="" onclick="hide_help_layer(); return false;">Close this box</a></td></tr>
+    </table></td></tr></table>
+  </div>
+#end
+
+#if ($next_image)
+  <div id="nextpage" style="visibility:hidden">
+    <iframe name="$next_image.page" style="display:none"></iframe>
+  </div>
+#end
+
+<br>
+<div style="text-align: center; font-family: Verdana;">
+<address><img style="width: 342px; height: 32px;"
+ alt="All rights reserved. Copyright 2007."
+ src="../../../images/TEXT_copyright.png"></address>
+</div>
+
+</body>
+</html>
+

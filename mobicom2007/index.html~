@@ -1,0 +1,308 @@
+<html>
+<head>
+  <title>Mesut Ali Ergin - MOBICOM'07 Trace Downloads</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <style type="text/css">
+  #g_title p, #g_footer p, #g_description p {
+    margin: 0;
+  }
+  /*
+
+  	-- -- -- -- -- -- --
+  	Browser Fixes
+  	-- -- -- -- -- -- --
+  	
+  	This file uses CSS filtering methods to fix various
+  	layout bugs.
+
+  	Each of the following three imported files is a 
+  	separate, browser-specific CSS file that keeps all 
+  	hacks out of the main style sheet.
+  	
+  	Over time, as supporting these browsers no longer
+  	remains a priority, cleaning up the hacks is as
+  	easy as deleting the @import statement below, or
+  	simply no longer linking this file from the HTML.
+  	
+  */
+
+  /* 
+    fix ie6 "peekaboo bug" using the "holly hack". 
+    Note, this style only gets applied to ie6
+  */
+  * html .wrapper {
+    height: 0.1%;
+  }
+
+  /* 
+   * IE5 mac - overrides the IE/Win hack 
+   */
+
+  /*\*//*/
+
+  * html #threecolumn div {
+  	height: auto;
+  }
+
+  /**/
+
+
+  /* 
+   * IE5/Win-specific CSS -ensures #container wraps all content on window resize
+   */
+
+  @media tty {
+   i{content:"\";/*" "*/}} * html #container { height: 1%; } /*";}
+  }/* */
+  /* Styling for editable elements. Eventually, this will be part of the style. */
+  .editable {
+    border: 1px dashed blue;
+  }
+  
+  #footer {
+    clear: both;
+  }
+  
+  /* Extra divs hidden by default. The custom CSS can override this though */
+  #extraDiv1, #extraDiv2, #extraDiv3, #extraDiv4, #extraDiv5, #extraDiv6 {
+    display: none;
+  }
+  
+  a img,:link img,:visited img {border: none;}
+
+
+  body {
+    text-align: center;
+  }
+  #container {
+    width: 718px;
+    text-align: left;
+    margin: 0 auto;
+  }
+  /** BEGIN CUSTOM SKIN **/
+  /*
+
+  	-- -- -- -- -- -- --
+  	Base CSS
+  	-- -- -- -- -- -- --
+  	
+  	This file simply removes default styling on most HTML elements in 
+  	order to reduce the need to later override them.
+  	
+  */
+
+  h1,h2,h3,h4,h5,h6,pre,code,p {font-size: 1em;}
+  dl,li,dt,dd,h1,h2,h3,h4,h5,h6,pre,form,body,html,p,blockquote,fieldset,input {margin: 0; padding: 0;}
+  a img,:link img,:visited img {border: none;}
+  address {font-style: normal;}html {background:#eee;}
+  body {background:#eee;font-family:'Verdana','Helvetica', 'Arial', sans-serif;font-size:0.85em;}
+  a {color:#00c;text-decoration:underline !important;}
+  a:visited {color:#551a8b;}
+  b, strong {font-weight:bold;}
+  blockquote {border-left:1px solid #ccc;margin:1em 3em;padding-left:1em;font-size:0.9em;}
+  blockquote p {line-height:1.45em;}
+  em {font-style:italic;}
+  h1, h2, h3, h4, h5, h6 {font-weight:normal;margin:1.5em 0 0.5em 0;}
+  h1 {font-size:2.25em;color:#666;margin:0;}
+  h2 {font-size:1.5em;color:#333;}
+  h3 {font-size:1.3em;}
+  h4 {font-size:1.15em;}
+  h5 {font-size:1em;}
+  h6 {font-size:0.8em;}
+  p, li {color:#000;line-height:1.75em;margin:0 0 1.5em 0;}
+  blockquote p, table p, dd p, li p, #header p {margin-bottom:0.5em;}
+  ul, ol {margin:1em 0; padding-left: 1.6em;}
+  li {margin:0.25em 0;}
+  ul li {list-style-type:disc;}
+  ol li {list-style-type:decimal;}
+  table {border:1px solid #ccc;border-width:1px 1px 0 1px;}
+  table caption {display:block;font-style:italic;white-space:nowrap;margin:0.5em 1em;}
+  table td, table th {padding:0.5em 1em;text-align:left;vertical-align:top;}
+  table th {font-weight:bold;border-bottom:1px solid #999;}
+  table td {border-bottom:1px solid #ddd;}
+
+  dl {margin:1em;line-height:1.5em;list-style-type:disc;}
+  dt {font-weight:bold;margin-top:0.5em;}
+  dd {margin-left:2em;}
+
+  #adsense {text-align:center;}
+  #container {
+  	padding: 25px 40px 10px 40px; 
+  	border: 1px solid #ccc;
+  	background:#fff;
+  	margin:1em auto;
+  }
+  #footer {border-top:1px solid #ccc;margin-top:2em;}
+  #header {border-bottom:1px solid #ccc;margin-bottom:2em;}
+  #sidebar {font-size:1.0em;}
+  #sidebar :first-child {margin-top:0;}
+  #sidebar-alternate {font-size:1.0em;}
+  #sidebar-alternate :first-child {margin-top:0;}
+  #main-content {background:#fff;}
+  #main-content h2:first-child {margin-top:0;}	
+
+  @media print {
+    html {background:#fff !important;}
+    #container {border-width:0px !important;padding:0 !important;}
+  }
+
+  /* Tweaks for Three-column layout
+  ----------------------------------------------- */
+  #threecolumn #main-content .wrapper {padding:0 25px;}
+
+  /* Tweaks for Two-column Left layout
+  ----------------------------------------------- */
+  #twocolumn-left #main-content .wrapper {padding-left:25px;}
+
+  /* Tweaks for Two-column Right layout
+  ----------------------------------------------- */
+  #twocolumn-right #main-content .wrapper {padding-right:25px;}
+
+  /* Tweaks for Two-column Liquid layout
+  ----------------------------------------------- */
+  #twocolumn-liquid-right #container {margin:1em 1em;}
+  #twocolumn-liquid-right #main-content .wrapper {padding-right:25px;}
+  #twocolumn-liquid-left #container {margin:1em 1em;}
+  #twocolumn-liquid-left #main-content .wrapper {padding-left:25px;}
+
+  /* Tweaks for One-column Liquid layout
+  ----------------------------------------------- */
+
+  /* Tweaks for One-column layout
+  ----------------------------------------------- */
+  #onecolumn #main-content .wrapper {padding-left:0;}
+
+  /* ie5win */
+  @media tty { i{content:"\";/*" "*/}} * html #container { padding: 25px 0px 10px 10px; } /*";}
+  }/* */
+
+  /** END CUSTOM SKIN **/
+  </style>
+
+  <!-- Hack to avoid flash of unstyled content in IE -->
+  <script> </script>
+
+</head>
+
+<body id="onecolumn">
+  <div id="container">
+    <div class="wrapper">
+      <div id="header">
+        <div class="wrapper">
+          <h1 id="page-title"><div id='g_title'>MOBICOM'07 ORBIT Trace Downloads</div></h1>
+          <div style="clear: both;"></div>
+          <p class="description"><div id='g_description'><p>On this page, you will find wireless experiment traces from <a href="http://www.orbit-lab.org">ORBIT testbed</a>, that are used in our <a href="http://www.winlab.rutgers.edu/~gruteser/papers/ergin_accessointdensity.pdf">Mobicom 2007 paper "Extended Abstract: Understanding the Effect of Acccess Point Density on Wireless LAN Performance"</a>. These anonymous traces are made available for public use and do not include any real-user data. Some of the files might be very large, so please be patient and use utilities that support resuming for http downloads. <p>Please direct questions regarding the files distributed herein to Mesut Ali Ergin at ergin(a)winlab(.)rutgers(.)edu<p>Thanks for your interest.<br></p>
+
+<p><br>PS: Recently, this data set has also been published on <a href="http://crawdad.cs.dartmouth.edu">CRAWDAD</a> as <a href="http://crawdad.cs.dartmouth.edu/rutgers/density">rutgers/density</a> dataset along with <a href="http://crawdad.cs.dartmouth.edu/rutgers/noise">noise</a> and <a href="http://crawdad.cs.dartmouth.edu/rutgers/capture">capture</a> datasets from <a href="http://www.orbit-lab.org">ORBIT</a>. </p></div></p>
+
+          <div style="clear: both"></div>
+        </div>
+      </div>
+      <!-- /editable --><!-- /wrapper --><!-- /header -->
+      <div id="main-content">
+        <div class="wrapper">
+          <div class="content-item"><div id='g_body'><ul>
+<li><b>Dataset Name:</b>&nbsp;rutgers/ap_density</li>
+<li><b>Authors:</b>&nbsp;Mesut Ali Ergin, Kishore Ramachandran, Marco Gruteser</li>
+<li><b>Summary:</b>&nbsp;This dataset includes realistic client arrival patterns and realistic application workloads that are used to evaluate effects of high-density deployments of interfering access points to IEEE 802.11 WLAN performance. Both wired and wireless frame dump traces are provided from the experiments in ORBIT wireless research testbed involving four access points and seventy-five stations.</li>
+<li><b>Paper:</b>&nbsp;Mesut Ali Ergin, Kishore Ramachandran and Marco Gruteser. <i>Extended Abstract: Understanding the Effect of Acccess Point Density on Wireless LAN Performance</i>, In Proceedings of ACM MOBICOM 2007, Montreal, Quebec, Canada, September 2007.</li>
+<li><b>Release Date:</b>&nbsp;2007-08-09</li>
+<li><b>Measurement Start:</b>&nbsp;2007-01-11-11:51 EST</li>
+<li><b>Measurement End:</b>&nbsp;2007-01-11-14:35 EST</li>
+<li><b>Website:</b>&nbsp;<a href="http://www.orbit-lab.org">http://www.orbit-lab.org</a></li>
+<li><b>Keywords:</b>&nbsp;Rutgers, WINLAB, ORBIT, 802.11, High Density WLAN, Inter-cell interference</li>
+<li><b>Measurement Purpose:</b>&nbsp;Understanding effects of increasing interfering acess point density to high density WLAN performance</li>
+<li><b>Network Type:</b>&nbsp;IEEE 802.11a BSS Mode (Infrastructured)</li>
+<li><b>Experiment Environment:</b>&nbsp;Experiments were performed on the 400-node grid of <a href="http://www.orbit-lab.org">ORBIT</a>, wireless research testbed. Placement of nodes follow a high density grid-type deployment in a 20 meters by 20 meters isolated area with approximately 1 meter inter-node distances.</li>
+<li><b>Experiment Settings:</b>&nbsp;ORBIT provides access to small form factor PCs with 1GHz Via C3 CPU, 512 MB RAM, 20 GB hard disk, three Gbps ethernet ports, and two Atheros AR5002X Mini PCI 802.11a/b/g (AR5212 MAC Baseband Processor + AR5112 Dual-band Radio-on-a-Chip) WLAN adapters. We have used GNU/Linux operating system with 2.6.18 series kernel, and Madwifi driver svn revision 2118. For access points, we have used Madwifi driver's AP mode with transparent bridging to that particular ORBIT node's Gbps Ethernet interface. All application services (WWW, and D-ITG -- VoIP and Exponential traffic) are also hosted on ORBIT nodes that are connected to the same switched Gbps data backbone.</li>
+<li><b>Methodology:</b>&nbsp;The experiments are conducted to measure effects of having multiple interfering APs that serve many users with realistic traffic workloads. The AP and clients use IEEE 802.11a protocol on channel 52 which is confirmed to be unoccupied throughout the experiment. Clients follow an arrival pattern (see below) to associate with the AP(s). If more than one AP is available, default AP selection algorithm on driver is used (highest RSSI AP gets picked). As clients arrive, they select an application profile (WWW, exponential traffic, or VoIP) randomly to match the percentage of traffic distribution that is observed in a typical office setting. After selecting their profiles, clients start the application session and generate traffic until the end of the experiment. Cumulative system throughput (as measured flowing between APs and application server) determined system performance in hauling traffic back and fort between wired and wireless networks. Multiple runs of the same experiment resulted in similar behaviors, thus only the traces from one instance of each experiment are made available to public.</li>
+
+</ul></div></div>
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 0</h2><ul>
+<li><b>Download Realistic STA Arrival Pattern:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/sta_arrivals.txt">sta_arrivals.txt</a></b>&nbsp;<ul><li><b>File Size:</b> 162-bytes</li><li<b>File Type:</b> Plain Text (UNIX CR/LF)</li><li><b>MD5SUM:</b> 560e857b97de6fc22aabbba30d899e37</li><li><b>Explanations:</b> This file contains station inter-arrival times in seconds at each line for a total of 75 stations. A control loop like:<i><br>   for (i=1;i&lt;75;i++)<br>  {<br>      create_station(i);<br>      sleep( read_line(i, sta_arrivals.txt) );<br>   } <br></i>will create station arrival patterns similar to the real users returning from lunch at the 64th IETF conference. This arrival pattern is extracted from the <a href="http://moment.cs.ucsb.edu/conan/index.php">UCSB 64nd IETF conference traces</a>. In processing those traces, a station is assumed to be inactive if no IP traffic (both directions) is detected for more than five minutes for that particular node. First 75 inactive nodes that start communication after the lunch hour are captured in the trace file.</li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 1</h2><ul>
+<li><b>Download Realistic Traffic Patterns:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/realisticTraffic.tgz">realisticTraffic.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 2408708-bytes</li><li<b>File Type:</b> Plain Text Files (UNIX CR/LF in GZip Compressed Tar)</li><li><b>MD5SUM:</b> b1c02140037db74c5887bf49f9d9d4d5</li><li><b>Explanations:</b> Since inter-cell interference is affected by end-user workloads, we constructed a synthetic office work-load in addition to bulk TCP-only workloads we used in PER experiments. The office
+workload is based on sniffer measurements obtained in our academic office environment for a single access point serving about 50 students and faculty. These measurements indicate that 97% of packets use the TCP protocol and about 75% of traffic is generated by web traffic. These measurements are reasonably consistent with (except for a 20% increase in web traffic) an <a href="http://doi.acm.org/10.1145/511399.511359">earlier analysis of SIGCOMM 2001 conference traces</a> covering 4 APs and 195 stations. Bursty web traffic in our workload follows the self-similar ON-OFF traffic model given by <a href="http://doi.acm.org/10.1145/277851.277897">Barford and Crovella (ACM SIGMETRICS 1998)</a>. We emulate the HTML transfer, browser processing, and HTML object retrieval phases with wget page retrieval tool. User's thinking time X between page accesses is Pareto distributed, with parameters k=1.5 and x_m=1, as suggested by Barford and Crovella. The remaining share of the workload comprises a mix of VoIP traffic (over UDP/IP) using the G.711 codec with H.323 signalling (3% of overall volume), and TCP packet transfers with exponentially distributed interarrival times (21% of the overall volume on average) as background traffic. These flows are emulated using the <a href="http://www.grid.unina.it/software/ITG/">D-ITG traffic generator</a> v.2.4.3.
+<p><br>
+In the provided trace collection, three files are included: <i>paretoSamples.txt, objectSizes.txt, DITG_samples.txt</i>. Pareto sample file is from one instantiation of our pareto random number generator, giving user thinking time values (over 500K values)distributed between 15 and 100 (seconds). Object size file is a collection of the sizes (in bytes) of random web objects (from http://www.winlab.rutgers.edu website). These objects include plain html pages, html pages with images, and various file downloads (presentation files, source code tarballs, etc.). The way to generate WWW traffic using these traces should be as follows: Each node uses a disjoint part of the pareto sample file and requests a random object (of sizes listed in objectSizes.txt) by calling wget to a web server (e.g., Apache httpd, or MS IIS) that serves objects of these sizes. Then node goes to sleep (emulation of browsing and thinking) for an interval given by the next value in paretoSamples.txt file. Process continues with another random object from the list. The rest of the realistic traffic pattern (as explained above) is created by DITG and examples of how we created exponential and CBR type TCP traffic, and VoIP traffic are provided in DITG_samples.txt file.
+</li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 2</h2><ul>
+<li><b>Download Traffic Dump for 1 AP 75 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/1AP_75STA.dump.tgz">1AP_75STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 28443925-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> 0392bf4b70b6e7064c20bb5a9da68c2c</li><li><b>Explanations:</b> This file contains a frame dump file as seen from the wired port of the access point(s), for the application traffic travelling between wireless stations and application servers. The volume of this traffic is considered to be a metric for the performance of the WLAN under experimentation, since WLAN is deployed to haul traffic back and forth between wired and wireless networks. Trace starts at UNIX epoch 1168535241 and finishes at 1168535821 (i.e. lasting approximately 10 minutes). These traces are from the experiments that use the realistic traffic workload as explained above. </li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE3</h2><ul>
+<li><b>Download Traffic Dump for 2 AP 75 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/2AP_75STA.dump.tgz">2AP_75STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 26406473-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> 0e4e387c891792485f510dcf2fadd0da</li><li><b>Explanations:</b> This file contains a frame dump file as seen from the wired port of the access point(s), for the application traffic travelling between wireless stations and application servers. The volume of this traffic is considered to be a metric for the performance of the WLAN under experimentation, since WLAN is deployed to haul traffic back and forth between wired and wireless networks. Trace starts at UNIX epoch 1168540183 and finishes at 1168540763 (i.e. lasting approximately 10 minutes). These traces are from the experiments that use the realistic traffic workload as explained above. </li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 4</h2><ul>
+<li><b>Download Traffic Dump for 3 AP 75 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/3AP_75STA.dump.tgz">3AP_75STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 27884032-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> 515709ec54e96bb39fefad69ab919f1d</li><li><b>Explanations:</b> This file contains a frame dump file as seen from the wired port of the access point(s), for the application traffic travelling between wireless stations and application servers. The volume of this traffic is considered to be a metric for the performance of the WLAN under experimentation, since WLAN is deployed to haul traffic back and forth between wired and wireless networks. Trace starts at UNIX epoch 1168542112 and finishes at 1168542752 (i.e. lasting approximately 10 minutes). These traces are from the experiments that use the realistic traffic workload as explained above. </li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 5</h2><ul>
+<li><b>Download Traffic Dump for 4 AP 75 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/4AP_75STA.dump.tgz">4AP_75STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 24140630-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> efed2e8d5911ce71b3d32a56ad982e50</li><li><b>Explanations:</b> This file contains a frame dump file as seen from the wired port of the access point(s), for the application traffic travelling between wireless stations and application servers. The volume of this traffic is considered to be a metric for the performance of the WLAN under experimentation, since WLAN is deployed to haul traffic back and forth between wired and wireless networks. Trace starts at UNIX epoch 1168543425 and finishes at 1168544065 (i.e. lasting approximately 10 minutes). These traces are from the experiments that use the realistic traffic workload as explained above. </li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 6</h2><ul>
+<li><b>Download Wireless Traffic Dump for 1 AP 4 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/1AP_4STA.dump.tgz">1AP_4STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 13878793-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> 328351b0b89915aacbfe764576b5b089</li><li><b>Explanations:</b> This file contains a frame dump file as seen by a wireless sniffer placed in the close vicinity of the WLAN being tested. There is no other process on the wireless sniffer and this trace is later used to derive PER statistics due to collisions together with driver packet error statistics from stations and AP(s). Due to the nature of the experiment, workload is constructed from clients to a central server by using 1300-byte frames sent using TCP at the maximum possible pace TCP allows. Trace lasts about five minutes.</li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 7</h2><ul>
+<li><b>Download Wireless Traffic Dump for 1 AP 8 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/1AP_8STA.dump.tgz">1AP_8STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 14687665-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> 1836308ff96c23397d8e801af92dbcad</li><li><b>Explanations:</b> This file contains a frame dump file as seen by a wireless sniffer placed in the close vicinity of the WLAN being tested. There is no other process on the wireless sniffer and this trace is later used to derive PER statistics due to collisions together with driver packet error statistics from stations and AP(s). Due to the nature of the experiment, workload is constructed from clients to a central server by using 1300-byte frames sent using TCP at the maximum possible pace TCP allows. Trace lasts about five minutes.</li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 8</h2><ul>
+<li><b>Download Wireless Traffic Dump for 1 AP 16 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/1AP_16STA.dump.tgz">1AP_16STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 15902813-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> 3b77ab830c70cff990e7aa4b753e0dee</li><li><b>Explanations:</b> This file contains a frame dump file as seen by a wireless sniffer placed in the close vicinity of the WLAN being tested. There is no other process on the wireless sniffer and this trace is later used to derive PER statistics due to collisions together with driver packet error statistics from stations and AP(s). Due to the nature of the experiment, workload is constructed from clients to a central server by using 1300-byte frames sent using TCP at the maximum possible pace TCP allows. Trace lasts about five minutes.</li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 9</h2><ul>
+<li><b>Download Wireless Traffic Dump for 2 AP 4 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/2AP_4STA.dump.tgz">2AP_4STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 12743194-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> b974a7e1cf013684bb4880013b3e86fa</li><li><b>Explanations:</b> This file contains a frame dump file as seen by a wireless sniffer placed in the close vicinity of the WLAN being tested. There is no other process on the wireless sniffer and this trace is later used to derive PER statistics due to collisions together with driver packet error statistics from stations and AP(s). Due to the nature of the experiment, workload is constructed from clients to a central server by using 1300-byte frames sent using TCP at the maximum possible pace TCP allows. Trace lasts about five minutes.</li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 10</h2><ul>
+<li><b>Download Wireless Traffic Dump for 2 AP 8 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/2AP_8STA.dump.tgz">2AP_8STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 13198498-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> 4a9674ce8f0c7130dd84399d5b1358db</li><li><b>Explanations:</b> This file contains a frame dump file as seen by a wireless sniffer placed in the close vicinity of the WLAN being tested. There is no other process on the wireless sniffer and this trace is later used to derive PER statistics due to collisions together with driver packet error statistics from stations and AP(s). Due to the nature of the experiment, workload is constructed from clients to a central server by using 1300-byte frames sent using TCP at the maximum possible pace TCP allows. Trace lasts about five minutes.</li></ul></li>
+</ul></div></div>
+
+<hr>
+<div class="content-item"><div id='g_body'><h2>TRACE 11</h2><ul>
+<li><b>Download Wireless Traffic Dump for 2 AP 16 STA Experiment:&nbsp;<a href="http://winlab.rutgers.edu/%7Eergin/files/2AP_16STA.dump.tgz">2AP_16STA.dump.tgz</a></b>&nbsp;<ul><li><b>File Size:</b> 15451062-bytes</li><li<b>File Type:</b> TCPDump File (GZip Compressed Tar)</li><li><b>MD5SUM:</b> 3f8703e16720aee65af24688b8a71c07</li><li><b>Explanations:</b> This file contains a frame dump file as seen by a wireless sniffer placed in the close vicinity of the WLAN being tested. There is no other process on the wireless sniffer and this trace is later used to derive PER statistics due to collisions together with driver packet error statistics from stations and AP(s). Due to the nature of the experiment, workload is constructed from clients to a central server by using 1300-byte frames sent using TCP at the maximum possible pace TCP allows. Trace lasts about five minutes.</li></ul></li>
+</ul></div></div>
+
+
+
+  
+        </div>
+      </div>
+      <!-- /wrapper --><!-- /main-content -->
+      <div id="footer"><div class="wrapper">
+        <p><div id='g_footer'><p style="text-align: center;">(c) All right reserved. WINLAB, Rutgers, The State University of New Jersey. 2007. </p></div></p>
+        <div style="clear: both"></div>
+
+      </div></div>
+      <!-- /wrapper --><!-- /footer -->
+    </div>
+  </div>
+<!-- /wrapper --><!-- /container -->
+
+<div id="extraDiv1"><span></span></div><div id="extraDiv2"><span></span></div>
+<div id="extraDiv3"><span></span></div><div id="extraDiv4"><span></span></div>
+<div id="extraDiv5"><span></span></div><div id="extraDiv6"><span></span></div>
+
+</body>
+</html>
+
+

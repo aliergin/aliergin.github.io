@@ -1,0 +1,2298 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+# vim:set ai et sts=2 sw=2:
+# vim600: set fdm=marker cms=#%s :
+#
+# Photon is a static HTML gallery generator.
+#   * directory structure is kept intact
+#   * scaled images are put in separate directories (800x600, ...)
+#   * etc...
+#
+#  Created: Luc Saillard <luc(@)sailard.org>  Wed, 13 Feb 2002 20:51:12 +0100
+#  Last modified: Luc Saillard <luc(@)saillard.org>  Tue, 15 Nov 2005 08:42:18 +0100
+#  Changelog:
+#    v0.1:    first release in Python.
+#    v0.2.3:  ???
+#    v0.2.4:  speed up improvement
+#    v0.2.5:  New <link> that indicates previous/next page
+#             Key Shorcuts can now be use
+#             Slideshow functions
+#    v0.2.6:  Javascript fix
+#             Cmdline option fix
+#             New exclude option
+#    v0.2.7:  Gimp plugin (very slow for the moment)
+#             Bug fixes
+#             New options: --resize-plugin
+#    v0.2.8:  Anchor is made for each row in the galery view
+#    v0.2.9:  Compat with gimp-2.0, python2.1, python2.2
+#             Fix a bug when thumbsize > image
+#             Fix a bug when gimp cannot recognize the image
+#    v0.2.10:
+#    v0.2.11:
+#    v0.2.12: Create html only if they are different
+#             Fix a bug in resizing landscape images
+#             Activate preloading the next image
+#    v0.3.0: PIL is now optional but a few format is supported
+#            By default, all image is now accepted
+#            When an image is in 8bits mode (gif), convert it to 24bits
+#    v0.3.2: Movie mode
+#            Awstats integration
+#            Quick save image feature
+#    v0.4.x: template engine, accesskey 
+#
+#
+#  Copyright (C) 2002-2007 Luc Saillard <luc(@)saillard.org>
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Includes modules 
+import getopt, os, sys, shutil, urllib, re, locale, codecs, errno, math
+from random import randrange, sample
+from fnmatch import *
+from stat import *
+from tempfile import gettempdir
+from commands import getstatusoutput
+from Photon import EXIF, Video, RAW, airspeed
+import md5
+import Photon
+
+# ------------------------------------------------------------------------ 
+""" Global options """ # 
+options = {}
+options['verbose_level'] = 1
+options['output_directory'] = './photos'
+options['comment_filename'] = '.comments'
+options['thumbsize'] = (160,120)
+options['sizelist'] = [(0,0), (1024,768), (800,600), (640,480)]
+options['forcecreate'] = 0
+options['forcecompress'] = 0
+options['display_columns'] = 4
+options['display_lines'] = 5
+options['generate_root_index_html'] = 1
+options['img_bgcolor'] = "#fffaf5"
+options['body_bgcolor'] = "#ccccff"
+options['exif'] = 1
+options['exif_bordercolor'] = "#008000"
+options['exif_bgcolor'] = "#f0fff0"
+options['exif_fgcolor'] = "black"
+options['javascript'] = 1
+options['exclude'] = ["*.mov", "*.avi", "*.mpg", "*.comments", "Makefile" ]
+options['rawpattern'] = ["*.bay", "*.bmq", "*.cr2", "*.crw", "*.cs1", "*.dc2", 
+                         "*.dcr", "*.fff", "*.k25", "*.kdc", "*.mos", "*.mrw",
+                         "*.nef", "*.orf", "*.pef", "*.raf", "*.rdc", "*.srf",
+                         "*.x3f"]
+options['resize_plugin'] = "gimp"
+options['resize_quality_low'] = 0.5
+options['resize_quality_high'] = 0.85
+options['gimp_program'] = "gimp"
+options['dcraw_program'] = "dcraw"
+options['rawmode_supported'] = -1
+options['charset'] = 'iso-8859-15'
+options['fileformat_plugin'] = 'pil'
+options['data_path'] = [ "." ]
+options['movie'] = 0
+options['moviepattern'] = ["*.mov", "*.avi"]
+options['movie_replace_mov_by_mpg'] = 1
+options['awstats'] = 0
+options['awstats_script_url'] = "/js/awstats_misc_tracker.js"
+options['theme'] = "photonv1"
+
+
+gimp_list = []  # This is a global list that contains jobs to be run by Gimp
+tempfile_list = [] # Global list to use to remove some files after processing
+failed_templates_loaded = [] # Global list to suppress duplicated warning message
+
+exif_summary = (
+    # Text String        ,   EXIF key
+  ('Manufacturer',         'Image Make', ),
+  ('Model',                'Image Model',),
+  ('Aperture Value',       'EXIF MaxApertureValue', ),
+  ('Color Space',          'EXIF ColorSpace', ),
+  ('Exposure Time',        'EXIF ExposureTime', ),
+  ('Exposure Program',     'EXIF ExposureProgram', ),
+  ('Shutter Speed',        'EXIF ShutterSpeedValue', ),
+  ('Flash',                'EXIF Flash', ),
+  ('Focal Length',         'EXIF FocalLength', 'mm'),
+  ('ISO',                  'EXIF ISOSpeedRatings', ),
+  ('Metering Mode',        'EXIF MeteringMode', ),
+ # ('Light Source',         'EXIF LightSource', ),
+  ('Date/Time',            'Image DateTime', ),
+)
+
+# ------------------------------------------------------------------------ 
+#
+# Main functions
+#
+def main():# 
+  """ main procedure """
+
+  short_opts="ac:d:EfhIJk:l:mo:s:t:Vvz"
+  long_opts=[ "comment=", "display-columns=", "no-exif", "force", "help",
+              "no-index", "display-lines=", "output-directory=", "sizelist=",
+              "thumbsize=", "version",  "verbose", "javascript", "compress"
+              "exif-bordercolor=", "exif-bgcolor=", "exif-fgcolor=",
+              "body-bgcolor=", "img-bgcolor=", "exclude=", "resize-plugin=",
+              "resize-quality-low=", "resize-quality-high=", "gimp-program=",
+              "movie", "awstats", "awstats-url", "skin", "print-skins"
+            ]
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], short_opts, long_opts)
+  except getopt.GetoptError, msg:
+    # print help information and exit:
+    if msg:
+      print msg
+    usage()
+    sys.exit(2)
+
+  for o, a in opts:
+    if o in ("-c", "--comment"):
+      options['comment_filename'] = a
+    elif o in ("-d", "--display-columns"):
+      if a.isdigit():
+        options['display_columns'] = int(a)
+      else:
+        print "Bad argument:",a,"must be a number"
+    elif o in ("-E", "--no-exif"):
+      options['exif'] = 0
+    elif o in ("-ff", ):
+      options['forcecreate'] = 2
+    elif o in ("-f", "--force"):
+      options['forcecreate'] += 1
+    elif o in ("-h", "--help"):
+      usage()
+      sys.exit()
+    elif o in ("-I", "--no-index"):
+      options['generate_root_index_html'] = 0
+    elif o in ("-J", "--no-javascript"):
+      options['javascript'] = 0
+    elif o in ("-l", "--display-lines"):
+      if a.isdigit():
+        options['display_lines'] = int(a)
+      else:
+        print "Bad argument:", a, "must be a number"
+    elif o in ("-o", "--output-directory"):
+      options['output_directory'] = a
+    elif o in ("-s", "--sizelist"):
+      l=[]
+      for s in a.split(','):
+        if s == '0':
+          l.append((0,0))
+        else:
+          m = re.search("^(\d+)x(\d+)$", s)
+          if m:
+            l.append((int(m.group(1)), int(m.group(2))))
+          else:
+            print "Bad size:", s, "must in the form 320x240"
+      # End: for s in a.split(','):
+      options['sizelist'] = l
+    elif o in ("-t", "--thumbsize"):
+      m = re.search("^(\d+)x(\d+)$", a)
+      if m:
+        options['thumbsize'] = ((int(m.group(1)),int(m.group(2))))
+      else:
+        print "Bad size:", a, "must in the form 320x240"
+    elif o in ("-V", "--version"):
+      print "Photon", Photon.version
+      sys.exit()
+    elif o in ("-v", "--verbose"):
+      options['verbose_level'] += 1
+    elif o in ("-z", "--compress"):
+      options['forcecompress'] = 1
+    elif o == "--exif-bordercolor":
+      if match_color_type(a):
+        options['exif_bordercolor'] = a
+      else:
+        print "Bad color:", a, "must in the form #0055ff or white"
+    elif o == "--exif-bgcolor":
+      if match_color_type(a):
+        options['exif_bgcolor'] = a
+      else:
+        print "Bad color:", a, "must in the form #0055ff or white"
+    elif o == "--exif-fgcolor":
+      if match_color_type(a):
+        options['exif_fgcolor'] = a
+      else:
+        print "Bad color:", a, "must in the form #0055ff or white"
+    elif o == "--body-bgcolor":
+      if match_color_type(a):
+        options['body_bgcolor'] = a
+      else:
+        print "Bad color:", a, "must in the form #0055ff or white"
+    elif o == "--img-bgcolor":
+      if match_color_type(a):
+        options['img_bgcolor'] = a
+      else:
+        print "Bad color:", a, "must in the form #0055ff or white"
+    elif o == "--exclude":
+      options['exclude'].append(a)
+    elif o == "--resize-plugin":
+      if a in ("gimp","pil"):
+        options['resize_plugin'] = a
+      elif a in ("magick"):
+        print "This method plugin ",a," is not available"
+      else:
+        print "This method plugin ",a," is unknow. Using default plugin: ",options['resize_plugin']
+    elif o == "--resize-quality-low":
+      if a.isdigit():
+        options['resize_quality_low'] = int(a)/100.0
+      else:
+        print "Bad argument:", a, "must be a number"
+    elif o == "--resize-quality-high":
+      if a.isdigit():
+        options['resize_quality_high'] = int(a)/100.0
+      else:
+        print "Bad argument:", a, "must be a number"
+    elif o == "--gimp-program":
+      options['gimp_program'] = a
+    elif o in ("-m", "--movie"):
+      options['movie'] = 1
+      for pat in options['moviepattern']:
+        try:
+          options['exclude'].remove(pat)
+        except ValueError:
+          pass
+    elif o in ("-a", "--awstats"):
+      options['awstats'] = 1
+    elif o == "--awstats-url":
+      options['awstats_script_url'] = a
+    elif o in ("-k", "--skin"):
+      options['theme'] = a
+    elif o == "--print-skins":
+      print_skins()
+      sys.exit(0)
+
+  if len(args)==0:
+    usage()
+    sys.exit()
+
+  if options['thumbsize'] not in options['sizelist']:
+    options['sizelist'].append(options['thumbsize'])
+
+  # If PIL could not be load, check if gimp is available
+  # and if gimp is not available, raise an error
+  if options['fileformat_plugin'] == 'internal':
+    options['gimp_program'] = find_gimp_program()
+    if options['gimp_program'] is None:
+      print 'Could not load PIL neither gimp.'
+      print 'In order to use this script, you must have PIL installed.'
+      print 'Get from http://www.pythonware.com/products/pil/'
+      sys.exit(3)
+    if options['verbose_level'] >= 1:
+      print "Could not load PIL, switching to gimp"
+    options['resize_plugin'] = 'gimp'
+
+  # Create HTML files
+  for path in args:
+    process_directory(path,"")
+
+  # If we are using Gimp, process the file list
+  if options['resize_plugin'] == "gimp" and len(gimp_list)>0:
+    options['gimp_program'] = find_gimp_program()
+    if options['gimp_program'] is None:
+      print "Gimp not found\nAborted\n"
+    else:
+      options['tempdir'] = mkdtemp("","photon")
+      gimp_resize_files(gimp_list)
+      os.rmdir(options['tempdir'])
+
+  # Cleanup (delete all temp files)
+  for file in tempfile_list:
+    try:
+      os.unlink(file)
+    except:
+      pass
+
+
+# ------------------------------------------------------------------------ 
+def usage(): # 
+  """ Print information to use this program """
+  print """
+Usage: photon [OPTION]... [PATH]...
+
+Options:
+  -a      --awstats               Insert Javascript for Awstats
+          --awstats-url=URL       Change default value for Awstats script url
+  -c NAME --comment               Name of the comment file (default .comments)
+  -d NUM  --display-columns=NUM   Number of columns in index (default 3)
+  -E      --no-exif               Don't include EXIF information in HTML file
+  -f      --force                 Overwrite non-image generated files (html, javascript, etc) (default no)
+  -ff     --force --force         Overwrite image files (default no)
+  -h      --help                  Print this help
+  -I      --no-index              Do not generate the high level index.html
+  -J      --no-javascript         Do not use javascript (no shortcuts, ... )
+  -k      --skin=THEME            Skin selector (default photonv1)
+          --print-skins           Print the list of available skins (not implemented)
+  -l NUM  --display-lines=NUM     Number of lines in index (default 5)
+  -m      --movie                 Movie mode, include link to movie (*.mov)
+  -o NAME --output-directory=NAME Name of the output directory
+  -s LIST --sizelist=LIST         Image sizes (default 0,1024x768,800x600,640x480)
+                                  0 is special case to specified the original resolution
+                                  wxh specify the width and the height in pixel of the image
+  -t SIZE --thumbsize=SIZE        Size of thumbnails (default 160x120)
+  -V      --version               Print Photon version
+  -v      --verbose               Be verbose
+  -z      --compress              Compress the original image if selected (default copy the image)
+          --exif-bordercolor=COLOR  Exif window border color (default #008000)
+          --exif-bgcolor=COLOR    Exif window background color (default #f0fff0)
+          --exif-fgcolor=COLOR    Exif window text color (default 'black')
+          --body-bgcolor=COLOR    Body background color (default #ccccff)
+          --img-bgcolor=COLOR     Image background color (default 'white')
+          --exclude=PATTERN       Exclude files matching PATTERN
+          --resize-plugin=PLUG    Program use to create thumbnails
+                                     internal: fastest method (default)
+                                     gimp: use Gimp>1.x (better quality)
+                                     magick: use ImageMagick (not implemented)
+          --resize-quality-low=Q  quality for small image. 0 (bad) and 100 (good)
+          --resize-quality-high=Q quality for big image 0 (bad) and 100 (good)
+          --gimp-program=PROG     use PROG for gimp
+          
+
+Shortcuts while viewing an image:
+  n/SPACE     Go to the next image (with the same resolution)
+  p/BACKSPACE Go to the previous image (with the same resolution)
+  s           Start/Stop the slideshow
+  +/-         Increase/Decrease by one second the slideshow's period
+  h           Show shortcut and help
+  i           Show Exif information
+  z           Change to the higher resolution [NOT YET IMPLEMENTED]
+
+""" 
+# ------------------------------------------------------------------------ 
+#
+# Functions that work on a directory or on a file
+#
+def process_directory(realpath, relativepath): # 
+  """ Generate thumbnails, html pages for this directory """
+
+  directories_list = []
+  images_list = []
+
+  destdir = os.path.join(options['output_directory'], relativepath)
+  safe_mkdir(destdir)
+
+  sourcedir = os.path.join(realpath, relativepath)
+
+  # For each images build all sub-image,
+  # for each directory, recurse into them
+  for entry in os.listdir(sourcedir):
+    # Don't accept directory or file beginning with a dot
+    if entry[0] == '.':
+      continue
+    pathname = os.path.join(sourcedir, entry)
+    for pattern in options['exclude']:
+      if pattern == entry:
+        if options['verbose_level'] >= 1:
+          print 'Excluding %s' % pathname
+        break
+      if fnmatch(pathname,pattern):
+        if options['verbose_level'] >= 1:
+          print 'Excluding %s' % pathname
+        break
+    else:
+      mode = os.stat(pathname)[ST_MODE]
+      if S_ISDIR(mode):
+        # Skip this directory, if we are inside of the output directory
+        if os.path.abspath(destdir) == os.path.abspath(os.path.join(realpath,relativepath,entry)):
+          print 'Excluding directory %s' % destdir
+          continue
+        process_directory(realpath, os.path.join(relativepath, entry))
+        directories_list.append(entry)
+      elif S_ISREG(mode):
+        picinfo = None
+        if options['movie']:
+          for pattern in options['moviepattern']:
+            if fnmatch(pathname,pattern):
+              picinfo = process_movie(realpath, relativepath, entry)
+              break
+        if not picinfo:
+          for pattern in options['rawpattern']:
+            if fnmatch(pathname, pattern):
+              picinfo = process_raw_file(realpath, relativepath, entry)
+              break
+          else:
+            picinfo = process_file(realpath, relativepath, entry)
+        if picinfo:
+          images_list.append(picinfo)
+      else:
+        if options['verbose_level'] >= 1:
+          print 'Skipping %s' % pathname
+
+  process_comment_file(realpath, relativepath, images_list)
+
+  # Now, we have the complete list of directory, and files ... sort them
+  images_list.sort(lambda x, y: cmp(x['filename'], y['filename']))
+  directories_list.sort()
+  # ... then generate html pages
+  make_directory_html(relativepath,directories_list, images_list)
+  if len(images_list) > 0:
+    make_image_html(relativepath,directories_list, images_list)
+
+# ------------------------------------------------------------------------ 
+def process_file(sourcedir, relativepath, filename): # 
+  """ Create for this file all thumbnails and return the size of the image """
+
+  srcfile = os.path.join(sourcedir, relativepath, filename)
+  # We need to detect, if a image can be draw at the screen.
+  # If original_size is always smaller than any sizelist (without thumbnail)
+  # then image is not draw to the screen. So keep a flag that can draw this
+  # image at the original_size
+  npicsconverted = 0
+  pic = {}
+  try:
+    im = Image.open(srcfile)
+    if options['verbose_level'] >= 1:
+      print 'Processing image', srcfile, im.format, "%dx%d" % im.size, im.mode
+  except IOError, err:
+    print "cannot create thumbnail for", srcfile ,"(", err.strerror, ")"
+  else:
+    # Foreach size of the image, resize them only when it's different from Original
+    pic['filename'] = filename
+    pic['original_size'] = im.size
+    pic['extra_resolution'] = []
+    if options['exif']:
+      file = open(srcfile, 'rb')
+      pic['exif'] = EXIF.process_file(file)
+    if im.size[1] > im.size[0]: # Keep aspect ratio
+      pic['aspect'] = 34
+      pic['ratio'] = float(im.size[1])/im.size[0]
+    else:
+      pic['aspect'] = 43
+      pic['ratio'] = float(im.size[0])/im.size[1]
+
+    for (w,h) in options['sizelist'] + [(-1,-1)]:
+      if w == -1 and h == -1: # Small hack to process code at the end of the loop
+        # If no image is converted (without counting thumbnail), then copy the original
+        # original size can not be in the 'sizelist'
+        if npicsconverted<2 and (0,0) not in options['sizelist']:
+          (w,h) = (0,0)
+          pic['extra_resolution'].append((0,0))
+        else:
+          break
+      if w == 0 and h == 0: # Special case when it is a original file
+        if options['forcecompress']:
+          (w,h) = im.size
+        else:
+          subdir = 'original'
+          destdir = os.path.join(options['output_directory'], relativepath, subdir)
+          destfile = os.path.join(destdir, filename)
+          if file_is_newer(destfile, srcfile):
+            safe_mkdir(destdir)
+            shutil.copyfile(srcfile, destfile)
+          npicsconverted+=1
+
+      if w != 0 and h != 0:
+        # Resize the image with keeping the ratio
+	if pic['aspect']==34:
+          newsize = (int(w/pic['ratio']),w)
+          is_original_smaller = h > im.size[1]
+	else:
+          newsize = (w,int(w/pic['ratio']))
+          is_original_smaller = w > im.size[0]
+
+        pic['filename'] = re.sub('^(.*)\.[^.]+$',"\\1.jpg",filename)
+        subdir='%dx%d' % (w,h)
+        destdir = os.path.join(options['output_directory'], relativepath, subdir)
+        destfile = os.path.join(destdir, pic['filename'])
+        if is_original_smaller and w != options['thumbsize'][0]:
+          # Don't generate thumbnail when original file is smaller
+          if options['verbose_level'] >= 1:
+            print "Skipping", srcfile, "for resolution %dx%d" % newsize
+          continue
+        npicsconverted+=1
+	if file_is_newer(destfile, srcfile):
+          safe_mkdir(destdir)
+          # We have 2 choices use Gimp,use Python Library, or our internal parser
+          if options['resize_plugin'] == "gimp":
+            if w*h<64000:
+              gimp_file = (srcfile,destfile,newsize,options['resize_quality_low'])
+            else:
+              gimp_file = (srcfile,destfile,newsize,options['resize_quality_high'])
+            gimp_list.append(gimp_file)
+          elif options['resize_plugin'] == 'pil':
+            try:
+              if im.mode == 'P':  # Image is in palette mode, convert it to 24bits
+                im = im.convert('RGB')
+              im.resize(newsize, Image.BICUBIC).save(destfile, 'JPEG', optimize=1, progressive=1)
+            except IOError, err:
+              print "Error while writing thumbnail, will try without optimization..."
+              print "Perhaps you can try to increase ImageFile.MAXBLOCK in the source file"
+              print err
+              try: # Try to save the Jpeg file without progessive option
+                im.resize(newsize,Image.BICUBIC).save(destfile, 'JPEG')
+              except IOError, err:
+                print "cannot create ", destfile, "(", err, ")"
+          else: # Use the python internal module resize method
+            raise("Error: resize plugin not know")
+    # Process comment for this file only
+    commentfile = srcfile + '.comments'
+    try:
+      f = open(commentfile, 'r')
+      pic['comments'] = "".join(f.readlines())
+      f.close()
+    except IOError:
+      pass
+
+    return pic
+
+# ------------------------------------------------------------------------ 
+def process_movie(sourcedir, relativepath, filename): # 
+  """ Create for this file all thumbnails and return the size of the image """
+
+  srcfile = os.path.join(sourcedir, relativepath, filename)
+  try:
+    video = Video.identify(srcfile)
+    if options['verbose_level'] >= 1:
+      print 'Processing video', srcfile, video.format, "%dx%d" % video.size
+  except IOError, err:
+    print "cannot recognize movie file: ", srcfile ,"(", err.strerror, ")"
+    return None
+  else:
+    movie = {}
+    movie_to_copy = get_new_movie_filename_after_hack(srcfile)
+    movie['realfilename'] = filename
+    movie['filename'] = re.sub('^(.*)\.[^.]+$',"\\1.jpg", filename)
+    movie['original_size'] = video.size
+    movie['movie'] = 1
+    movie['extra_resolution'] = []
+    movie['exif'] = {}
+    if video.size[1] > video.size[0]: # Keep aspect ratio
+      movie['aspect'] = 34
+      movie['ratio'] = float(video.size[1])/video.size[0]
+    else:
+      movie['aspect'] = 43
+      movie['ratio'] = float(video.size[0])/video.size[1]
+
+    # Copy the movie in the original directory
+    subdir = 'original'
+    destdir = os.path.join(options['output_directory'], relativepath, subdir)
+    destfile = os.path.join(destdir, filename)
+    if file_is_newer(destfile, srcfile):
+      safe_mkdir(destdir)
+      if movie_to_copy != srcfile:
+        movie['movie_hack_enable'] = 1
+        movie['realfilename'] = re.sub('^(.*)\.[^.]+$',"\\1.mpg", filename)
+        destfile = re.sub('^(.*)\.[^.]+$',"\\1.mpg", destfile)
+      shutil.copyfile(movie_to_copy, destfile)
+
+    # Now the big part, we will take some frames from the movie to create a
+    # mosaic of images. The number of frames depends of the resolution of images.
+    # But each (small) image will be the size of the preview. So preview need to
+    # be a multiple of big image.
+    # How image will be named ? the same of the movie, but with the frame
+    # number in it. Example dscn00234-3000.jpg
+
+    # First calculate the size of the small image, keeping the ratio of the
+    # original size of the movie
+    if movie['aspect'] == 34:
+      thumbsize = (int(options['thumbsize'][0]/movie['ratio']),options['thumbsize'][0])
+    else:
+      thumbsize = (options['thumbsize'][0],int(options['thumbsize'][0]/movie['ratio']))
+
+    movie['thumbsize'] = thumbsize
+    subdir ='%dx%d' % thumbsize
+    destdir = os.path.join(options['output_directory'], relativepath, subdir)
+    safe_mkdir(destdir)
+
+    # Get a default image to display the same in all resolutions
+    destfile = os.path.join(destdir, movie['filename'])
+    tempframepath = os.path.join(destdir, "..", movie['filename'])
+    video.get_frame(tempframepath, 0)
+    resize_image(tempframepath, destfile, thumbsize)
+    tempfile_list.append(tempframepath)
+
+    for (w,h) in options['sizelist']:
+      if w == 0 and h == 0:
+        continue
+
+      # Find how many images we can put in this size
+      (nimgw, restw) = divmod(w,thumbsize[0])
+      (nimgh, resth) = divmod(h,thumbsize[1])
+
+      if restw>0 or resth>0:
+        if options['verbose_level'] >= 1:
+          print "We cannot create an perfect image map for your video ", srcfile
+          print "Size of the image: %dx%d" % (w,h)
+          print "Size of the video: %dx%d" % video.size
+          print "Size of the thumbnail: %dx%d" % thumbsize
+          print "remain %d pixels in width and remain %d pixels in height" % (restw, resth)
+
+      # Number of images we need to extract
+      totalimages = nimgw * nimgh
+
+      listoframes = generate_list_of_frames(video.frames, totalimages)
+      movie['frames_%dx%d' % (w,h)] = listoframes
+
+      for frame in listoframes:
+ 
+        if options['verbose_level'] >= 2:
+          print "Get frame N°%d from " % (frame, filename)
+        framefilename = re.sub('^(.*)\.[^.]+$',"\\1-%6.6d.jpg"%frame,filename)
+        destfile = os.path.join(destdir, framefilename)
+        tempframepath = os.path.join(destdir, "..", framefilename)
+        if file_is_newer(destfile, srcfile):
+          video.get_frame(tempframepath, frame)
+          # Now resize the image
+          tempfile_list.append(tempframepath)
+          resize_image(tempframepath, destfile, thumbsize)
+
+        # end of if file_is_newer(destfile, srcfile):
+      # end of for frame in listoframes:
+    # for (w,h) in options['sizelist']:
+
+    return movie
+
+# ------------------------------------------------------------------------ 
+def process_raw_file(sourcedir, relativepath, filename): # 
+  """ Process a raw image produce by a digital camera.
+      This is dcraw program, to convert image, and exiftools
+      exif metadata into the result image.
+      Sucess returns the size of the image
+  """
+  if options['rawmode_supported'] == -1:
+    options['rawmode_supported'] = is_raw_supported()
+  if options['rawmode_supported'] == False:
+    return
+  
+  srcfile = os.path.join(sourcedir, relativepath, filename)
+  try:
+    rawimg = RAW.identify(srcfile)
+    if options['verbose_level'] >= 1:
+      print 'Processing rawfile', srcfile, rawimg.format
+  except IOError, err:
+    print "This is not a raw file: ", srcfile ,"(", err.strerror, ")"
+    return None
+
+  ppmfilename = re.sub('^(.*)\.[^.]+$',"\\1.pnm",filename)
+
+  # Try to convert the image, using dcraw in pnm (native format)
+  destdir = os.path.join(options['output_directory'], relativepath)
+  ppmpath = os.path.join(destdir, ppmfilename)
+  tempfile_list.append(ppmpath)
+  if rawimg.convert(ppmpath) is None:
+    print "Error while processing %s " % filename
+    return None
+
+  # ... then process this image with process_file()
+  picinfo = process_file(options['output_directory'], relativepath, ppmfilename)
+  if picinfo is None:
+    return None
+
+  # in case we want the original image, copy the raw file
+  if not options['forcecompress']:
+    for (w,h) in options['sizelist']:
+      if w == 0 and h == 0:
+        # Ok we really want the original image, so we need to copy the image
+        destfile = os.path.join(destdir, "original", filename)
+        if file_is_newer(destfile, srcfile):
+          safe_mkdir(destdir)
+          shutil.copyfile(srcfile, destfile)
+        # ... and delete the old .pnm image
+        ppmpath = os.path.join(destdir, "original", ppmfilename)
+        tempfile_list.append(ppmpath)
+        break
+  # Now returns, the image information
+  picinfo['is_raw'] = 1
+  picinfo['realfilename'] = filename
+  return picinfo
+
+# ------------------------------------------------------------------------ 
+def generate_list_of_frames(total_frames, wanted_frames):
+  """ Return a list (random) or non random of frames we want """
+  if False:
+    listoframes = sample(xrange(total_frames), wanted_frames)
+    listoframes.sort()
+    return listoframes
+  else:
+    listoframes = []
+    frame = 0
+    while len(listoframes) < wanted_frames:
+      listoframes.append(frame)
+      frame += total_frames/wanted_frames
+    return listoframes
+    
+
+
+# ------------------------------------------------------------------------ 
+def process_comment_file(realpath, relativepath, images_list): # 
+  """ Process the .comments in this directory that contains a comment for an image """
+
+  try:
+    f = open(os.path.join(realpath, relativepath, options['comment_filename']), 'r')
+
+    r = re.compile('^"([^"]+)"\s+"([^"]+)"')
+    s = f.readline()
+    while s:
+      m = r.search(s)
+      if m:
+        # Ok we found a filename, and a comment in this line
+        # TODO: use map function ?
+        for i in images_list:
+          if i['filename'] == m.group(1):
+            i['comments'] = m.group(2)
+            break
+      # silently discard bad line ?
+      else:
+        if options['verbose_level'] >= 2:
+          print "Bad Line: ",s
+        pass
+      s = f.readline()
+    f.close()
+  except IOError:
+    pass 
+
+# ------------------------------------------------------------------------ 
+def make_directory_html(relativepath, directories_list, images_list): # 
+  """ Make all html page for index this directory """
+
+  if relativepath == "" and not options['generate_root_index_html']:
+    return
+
+  images_processed = 0 # Number of the images currently processed in the list
+  page_index = 0       # Number of index.html page currently processed
+  total_images = len(images_list) + len(directories_list)
+  items_per_page = options['display_columns'] * options['display_lines'];
+  if items_per_page > total_images:
+    items_per_page = total_images
+  output_directory = os.path.join(options['output_directory'], relativepath)
+
+  # Generate extern file for the directory (images,...)
+  copy_data_files(output_directory)
+
+  # Load the template
+  template_content = template_loader.load_text("index.html")
+  template = airspeed.Template(template_content)
+
+  # Initialize data to fill in the template
+  namespace = options
+  namespace['version'] = Photon.version
+  if relativepath == "":
+    namespace['title'] = "Picture Gallery";
+  else:
+    namespace['title'] = relativepath.split(os.sep)[-1];
+  namespace['navbar'] = navbar_for_index_html(relativepath)
+  if options['awstats']:
+    namespace['awstats_script_url'] = options['awstats_script_url']
+  namespace['thumbsize_width'] = options['thumbsize'][0]
+  namespace['thumbsize_height'] = options['thumbsize'][1]
+
+ 
+  while images_processed < total_images:
+
+    if namespace.has_key('row_images'):
+      del namespace['row_images']
+    if namespace.has_key('row_dirs'):
+      del namespace['row_dirs']
+
+    if images_processed == 0:
+      old_index_html_filename = 'index.html'
+    else:
+      old_index_html_filename = 'index%d.html' % (images_processed / items_per_page)
+    old_index_html_filename = os.path.join(output_directory, old_index_html_filename)
+    index_html_filename = old_index_html_filename + '.new'
+
+
+    fill_index_html_header(namespace, relativepath, None, None)
+    if images_processed == 0:
+      fill_index_html_directories(namespace, directories_list , images_list)
+      total_images -= len(directories_list) # Small hack, because i want to do a do {} while(x)
+
+    if len(directories_list) == 0: # If directories printed, then leave other images alone MAE
+      fill_index_html_images(namespace, images_list[images_processed : images_processed + items_per_page])
+
+    fill_index_html_footer(namespace, page_index, images_processed, total_images)
+
+    f = open(index_html_filename, 'w')
+    template.merge_to(namespace, f, template_loader)
+    f.close()
+
+    replace_if_different(old_index_html_filename, index_html_filename)
+
+    images_processed += items_per_page
+    page_index += 1
+
+# ------------------------------------------------------------------------ 
+def make_image_html(relativepath, directories_list, images_list): # 
+  """ Make all html page for all images """
+
+  output_directory = os.path.join(options['output_directory'], relativepath)
+
+  if options['exif']:
+    make_exif_js(os.path.join(output_directory, 'exif.js'))
+
+  if options['javascript']:
+    make_shortcut_js(os.path.join(output_directory, 'shortcuts.js'))
+
+  # Load the template
+  template_image = airspeed.Template(template_loader.load_text("image.html"))
+  template_movie = airspeed.Template(template_loader.load_text("movie.html"))
+
+  # initialize data to fill in the template
+  namespace = options
+  namespace['version'] = Photon.version
+  namespace['thumbsize_width'] = options['thumbsize'][0]
+  if options['awstats']:
+    namespace['awstats_script_url'] = options['awstats_script_url']
+  if options['javascript']:
+    namespace['on_load_script'] = "common_init()"
+  elif options['exif']:
+    namespace['on_load_script'] = "exif_init()"
+
+  total_images = len(images_list)
+  k = 0
+
+  while k < total_images:
+
+    image = images_list[k]
+
+    for resolution in options['sizelist'] + image['extra_resolution']:
+
+      old_image_html_filename = get_htmlpage_for_image(image, resolution)
+      old_image_html_filename = os.path.join(output_directory, urllib.unquote(old_image_html_filename))
+      image_html_filename = old_image_html_filename + '.new'
+
+      # Calculate the previous and next image/link
+      if k == 0:
+        namespace['previous_image'] = None
+      else:
+        previous_image = images_list[k - 1]
+        namespace['previous_image'] = {}
+        namespace['previous_image']['page'] = get_htmlpage_for_image(previous_image, resolution)
+        namespace['previous_image']['img']  = get_url_for_image(previous_image, resolution)
+        namespace['previous_image']['thumbimg'] = get_url_for_image(previous_image, options['thumbsize'])
+        namespace['previous_image']['filename'] = previous_image['filename']
+        if previous_image.has_key('comments'):
+            namespace['previous_image']['comments'] = previous_image['comments']
+
+      if k + 1 >= len(images_list):
+        namespace['next_image'] = None
+      else:
+        next_image = images_list[k + 1]
+        namespace['next_image'] = {}
+        namespace['next_image']['page'] = get_htmlpage_for_image(next_image, resolution)
+        namespace['next_image']['img']  = get_url_for_image(next_image, resolution)
+        namespace['next_image']['thumbimg'] = get_url_for_image(next_image, options['thumbsize'])
+        namespace['next_image']['filename'] = next_image['filename']
+        #print "next_image of %s is %s" % (image['filename'], namespace['next_image']['page'])
+        if next_image.has_key('comments'):
+            namespace['next_image']['comments'] = next_image['comments']
+
+      namespace['title'] = image['filename']
+      namespace['comments'] = None
+      namespace['movie_link'] = None
+      namespace['movie_filename'] = None
+      namespace['movie_frames'] = None
+      namespace['img_is_raw'] = None
+      namespace['list_of_exif_properties'] = None
+      namespace['has_exif'] = None
+
+      # Make the html page for this image and this resolution
+      f = open(image_html_filename, 'w')
+      if image.has_key('movie'):
+        fill_movie_html_body(namespace, relativepath, images_list, k, resolution)
+        template_movie.merge_to(namespace, f, template_loader)
+      else:
+        fill_image_html_body(namespace, relativepath, images_list, k, resolution)
+        if options['exif']:
+          fill_image_html_exif_window(namespace, image)
+        template_image.merge_to(namespace, f, template_loader)
+      f.close()
+      
+      replace_if_different(old_image_html_filename, image_html_filename)
+
+    # End: for resolution in options['sizelist']:
+
+    k += 1
+
+  # End: for image in images_list
+
+# ------------------------------------------------------------------------ 
+#
+# Functions that output HTML Code
+#
+def fill_index_html_header(namespace, relativepath, previous_link, next_link): # 
+  """ Write in the file, header of an index.html page (body included) """
+
+  if previous_link:
+    namespace['previous_link'] = previous_link
+  if next_link:
+    namespace['next_link'] = next_link
+
+
+# ------------------------------------------------------------------------ 
+def fill_index_html_directories(namespace, directories_list, images_list): # 
+  """ Output a HTML table that contains the directories list """
+
+  if len(directories_list)==0:
+    return
+
+  column = 0
+  row_dirs = []
+  cases = []
+
+  # Create a case for each directory
+  for d in directories_list:
+    if column >= options['display_columns']:
+      row_dirs.append(cases)
+      column = 0
+      cases = []
+
+    case = {}
+    case['url'] = urllib.quote(d)
+    case['name'] = d
+
+    # if the directory has a jpeg with the same name, use it
+    folderimg = find_imagename_into_imagelist(d, images_list)
+    if folderimg == None:
+      case['type'] = 'normal'
+    else:
+      case['type'] = 'ext'
+      if options['verbose_level'] >= 1:
+        print "Found a small miniature for this folder \"%s\" with image \"%s\"" % (d,folderimg['filename'])
+      folderimgurl = urllib.quote(os.path.join("%dx%d" % options['thumbsize'], folderimg['filename']))
+      if folderimg['aspect'] == 34:
+        thumbsize_height = options['thumbsize'][0]
+        thumbsize_width = thumbsize_height / folderimg['ratio']
+      else:
+        thumbsize_width  = options['thumbsize'][0]
+        thumbsize_height = thumbsize_width / folderimg['ratio']
+      case['thumbsize_width'] = thumbsize_width
+      case['thumbsize_height'] = thumbsize_height
+      case['thumb_url'] = folderimgurl
+      case['thumb_name'] = folderimg['filename']
+
+    column += 1
+    cases.append(case)
+  
+  # Fill the empty case ...
+  if column > 0:
+    while column < options['display_columns']:
+      case = {}
+      case['type'] = 'blank'
+      column += 1
+      cases.append(case)
+    row_dirs.append(cases)
+  namespace['row_dirs'] = row_dirs
+
+
+# ------------------------------------------------------------------------ 
+def fill_index_html_images(namespace, images_list):  # 
+  """ Output a HTML table that contains the images list """
+
+  if len(images_list)==0:
+    return
+
+  column = 0
+  row = 0
+  row_images = []
+  cases = []
+
+  # Create a case for each image
+  for pic in images_list:
+
+    if column >= options['display_columns']:
+      # Create a new row, 
+      row_images.append(cases)
+      cases = []
+      row += 1
+      column = 0
+
+    if pic['aspect'] == 34:
+      thumbsize_height = options['thumbsize'][0]
+      thumbsize_width = thumbsize_height / pic['ratio']
+    else:
+      thumbsize_width  = options['thumbsize'][0]
+      thumbsize_height = thumbsize_width / pic['ratio']
+ 
+    case = {}
+    case['thumbsize_width'] = thumbsize_width
+    case['thumbsize_height'] = thumbsize_height
+    case['img_html_url'] = get_htmlpage_for_image(pic, options['sizelist'][0])
+    case['img_url'] = urllib.quote(os.path.join("%dx%d" % options['thumbsize'], pic['filename']))
+    if pic.has_key('comments'):
+      case['comments'] = pic['comments']
+    else:
+      case['comments'] = pic['filename']
+      
+
+    if pic.has_key('movie'):
+      case['type'] = 'movie'
+      case['name'] = pic['realfilename']
+    else:
+      case['type'] = 'img'
+      case['name'] = pic['filename']
+    column += 1
+    cases.append(case)
+
+  # Fill the empty case ...
+  if column > 0:
+    while column < options['display_columns']:
+      # A blank image
+      case = {}
+      case['type'] = 'blank'
+      column += 1
+      cases.append(case)
+    row_images.append(cases)
+  namespace['row_images'] = row_images
+
+# ------------------------------------------------------------------------ 
+def fill_index_html_footer(namespace, page_index, images_processed, total_images): # 
+  """ Fill the footer for a index.html page """
+
+  items_per_page = options['display_columns'] * options['display_lines'];
+  namespace['items_per_page'] = items_per_page
+  namespace['page_index'] = page_index
+  namespace['previous_page_index'] = page_index-1
+
+  # Output the Next link
+  max_pages = total_images / items_per_page
+  if (total_images % items_per_page) == 0:
+    max_pages -= 1
+  namespace['max_pages'] = max_pages
+  namespace['next_page_index'] = page_index+1
+  namespace['total_images'] = total_images
+
+  # Output the Number of Images
+  if total_images>0:
+    max_images_displayed = images_processed + items_per_page
+    if max_images_displayed > total_images:
+      max_images_displayed = total_images
+    namespace['max_images_displayed'] = max_images_displayed
+    namespace['images_processed'] = images_processed+1
+          
+# ------------------------------------------------------------------------ 
+def fill_image_html_body(namespace, relativepath, images_list, index, resolution): # 
+  """ Output in the file f, the content of the body for this image """
+
+  imageinfo = images_list[index]
+
+  namespace['navbar'] = navbar_for_image_html(relativepath, images_list, index)
+  namespace['img_img_link'] = get_url_for_image(imageinfo,resolution)
+  namespace['img_img_alt'] = imageinfo['filename']
+  image_html_body_sub(namespace, imageinfo, resolution)
+
+  not_available = False
+  if imageinfo['aspect']==34:
+    if resolution[1] > imageinfo['original_size'][1]:
+      not_available = True
+  else:
+    if resolution[0] > imageinfo['original_size'][0]:
+      not_available = True
+  if imageinfo.has_key('is_raw') and resolution == (0,0) and not options['forcecompress']:
+    not_available = True
+
+  if not_available:
+    namespace['img_img_link'] = 'notavailable.png'
+    namespace['img_img_alt'] = "This image is not available in this resolution"
+  
+  if imageinfo.has_key('comments'):
+    namespace['comments'] = imageinfo['comments']
+
+# ------------------------------------------------------------------------ 
+def fill_movie_html_body(namespace, relativepath, images_list, index, resolution): # 
+  """ Output in the file f, the content of the body for this movie """
+
+  imageinfo = images_list[index]
+
+  namespace['navbar'] = navbar_for_image_html(relativepath, images_list, index)
+  namespace['img_alt'] = imageinfo['filename']
+  image_html_body_sub(namespace, imageinfo, resolution)
+
+  if resolution[0] > imageinfo['original_size'][0]:
+    namespace['img_alt'] = "This image is not available in this resolution"
+
+  #
+  # Use the original size of the image is always smaller than the
+  # greater image. So find the best resolution in the list, and
+  # display this map. The best solution, is to display correctly
+  # using the real screen size.
+  #
+  if resolution == (0,0):
+    current_best_size = (0,0)
+    for s in options['sizelist']:
+      if s == (0,0) or s == options['thumbsize']:
+        continue
+      if s[0]*s[1] > current_best_size[0]*current_best_size[1]:
+        current_best_size = s
+    resolution = current_best_size
+  if resolution == (0,0):
+    # FIXME: find the real resolution of the movie
+    return 
+
+  # Now compute the filename used to build a wall of images
+  frames = imageinfo["frames_%dx%d" % resolution]
+  templateimgsrc = re.sub('^(.*)\.[^.]+$',"\\1", imageinfo['realfilename'])
+  templateimgurl = urllib.quote("%dx%d/%s" % (imageinfo["thumbsize"][0], imageinfo["thumbsize"][1], templateimgsrc))
+
+  frames_per_width  = resolution[0]/imageinfo['thumbsize'][0]
+  frames_per_height = resolution[1]/imageinfo['thumbsize'][1]
+
+  # The wall of images is build using a bigtable
+  n = 0
+  namespace['movie_frames'] = []
+  for hhh in xrange(frames_per_height):
+    row = []
+    for www in xrange(frames_per_width):
+      frame = {}
+      frame['url'] = "%s-%6.6d.jpg" % (templateimgurl, frames[n])
+      frame['width'] = imageinfo['thumbsize'][0]
+      frame['height'] = imageinfo['thumbsize'][1]
+      n+=1
+      row.append(frame)
+    namespace['movie_frames'].append(row)
+
+
+# ------------------------------------------------------------------------ 
+def image_html_body_sub(namespace, imageinfo, resolution): # 
+  """ Return the HTML code to display 2 thumbnails to include in the image page """
+
+  # If the resolution is not a standard resolution, but part of extra, then
+  # don't link next and previous image with that resolution, but the first in
+  # the list
+  #print imageinfo['filename'], ": resolution %dx%d" % resolution
+  if resolution in imageinfo['extra_resolution']:
+    resolution = options['sizelist'][0]
+
+  if imageinfo.has_key('movie'):
+    namespace['movie_link'] = get_url_for_movie(imageinfo)
+    namespace['movie_filename'] = imageinfo['realfilename']
+
+    namespace['movie_sizelist'] = []
+    for r in options['sizelist']:
+      if r in (resolution, (0,0), imageinfo['thumbsize']):
+        continue
+      res = {}
+      res['frames_per_width'] = r[0]/imageinfo['thumbsize'][0]
+      res['frames_per_height'] = r[1]/imageinfo['thumbsize'][1]
+      res['accesskey'] = res['frames_per_width']
+      res['pageurl'] = get_htmlpage_for_image(imageinfo, r)
+      namespace['movie_sizelist'].append(res)
+    # end of for r in options['sizelist']:
+
+  # This is a normal image (not a movie)
+  elif len(options['sizelist']):
+
+    # Special case for raw files
+    if imageinfo.has_key('is_raw') and not options['forcecompress']:
+      namespace['img_is_raw'] = 1
+      namespace['img_raw_link'] = urllib.quote("original/%s" % (imageinfo['realfilename']))
+      namespace['img_raw_filename'] = imageinfo['realfilename']
+
+    accesskeys_already_used = []
+    namespace['img_sizelist'] = []
+    for r in options['sizelist'] + imageinfo['extra_resolution']:
+      if r == resolution or r == options['thumbsize']:
+        continue
+      # Don't add image that is smaller than the original file
+      if imageinfo['aspect']==34:
+        if r[1] > imageinfo['original_size'][1]:
+          continue
+      else:
+        if r[0] > imageinfo['original_size'][0]:
+          continue
+
+      res = {}
+      res['imgurl'] = get_url_for_image(imageinfo,r)
+      res['pageurl'] = get_htmlpage_for_image(imageinfo,r)
+      if r == (0,0):
+        res['size'] = "Original"
+      else:
+        if imageinfo['aspect'] == 34:
+          res['size'] = "%dx%d" % (r[1], r[0])
+        else:
+          res['size'] = "%dx%d" % r
+      # Find the first letter for accesskeys
+      for k in xrange(len(res['size'])):
+        if res['size'][k] not in accesskeys_already_used:
+          accesskey = res['size'][k]
+          res['accesskey'] = accesskey
+          accesskeys_already_used.append(accesskey)
+          break
+      namespace['img_sizelist'].append(res)
+    # End: for r in options['sizelist'] + imageinfo['extra_resolution']:
+  # End: if len(options['sizelist']):
+
+
+# ------------------------------------------------------------------------ 
+def exif_resolv_ratio(ratio_of_ifdtag): #
+  """ Convert a string that represent a ratio (x/y) to the value of this ratio """
+  # Convert ratio format into a float
+  if isinstance(ratio_of_ifdtag, EXIF.IFD_Tag):
+    if ratio_of_ifdtag.field_type != 5: # Not ratio type
+      return ratio_of_ifdtag
+    ratio = ratio_of_ifdtag.printable
+  else:
+    ratio = ratio_of_ifdtag
+  m = re.search("^(\d+)/(\d+)$", ratio)
+  if m:
+    return float(m.group(1)) / float(m.group(2))
+  else:
+    return float(ratio)
+
+ 
+# ------------------------------------------------------------------------ 
+def fill_image_html_exif_window(namespace, imageinfo): # 
+  """ Output the HTML code for the exif window page """
+
+  list_of_exif_properties = []
+
+  for exif_data in exif_summary:
+    prop_name = exif_data[0]
+    exif_key = exif_data[1]
+    if len(exif_data)>2:
+      unit = exif_data[2]
+    else:
+      unit = ""
+    if imageinfo['exif'].has_key(exif_key):
+
+      exif_property = {}
+      exif_value = exif_resolv_ratio( imageinfo['exif'][exif_key] )
+
+      # Some special case
+      if exif_key == 'EXIF FocalLength':
+        #for a in imageinfo['exif']:
+        #  print "%s: %s" % (a, imageinfo['exif'][a])
+        #sys.exit(1)
+        
+        if imageinfo['exif'].has_key('EXIF FocalLengthIn35mmFilm'):
+          exif_string= exif_resolv_ratio( imageinfo['exif']['EXIF FocalLengthIn35mmFilm'] )
+          prop_name += ' (35mm)'
+        
+        elif imageinfo['exif'].has_key('MakerNote FocalPlaneDiagonal'):
+          # diagonal needs to be in mm
+          diag= exif_resolv_ratio( imageinfo['exif']['MakerNote FocalPlaneDiagonal'] )
+          exif_string = "%.2f" %  (exif_value * math.hypot(36,24) / diag)
+          prop_name += ' (35mm)'
+        
+        elif imageinfo['exif'].has_key('EXIF FocalPlaneResolutionUnit') \
+         and imageinfo['exif'].has_key('EXIF FocalPlaneXResolution') \
+         and imageinfo['exif'].has_key('EXIF FocalPlaneYResolution'):
+          # Try to compute the focal using the size of the image
+          if   imageinfo['exif'].has_key('MakerNote CanonImageWidth') \
+           and imageinfo['exif'].has_key('MakerNote CanonImageHeight'):
+            w = int(imageinfo['exif']['MakerNote CanonImageWidth'].printable)
+            h = int(imageinfo['exif']['MakerNote CanonImageHeight'].printable)
+
+          elif imageinfo['exif'].has_key('EXIF ExifImageWidth') \
+           and imageinfo['exif'].has_key('EXIF ExifImageLength'):
+            w = int(imageinfo['exif']['EXIF ExifImageWidth'].printable)
+            h = int(imageinfo['exif']['EXIF ExifImageLength'].printable)
+
+          elif imageinfo['exif'].has_key('EXIF ImageWidth') \
+           and imageinfo['exif'].has_key('EXIF ImageLength'):
+            w = int(imageinfo['exif']['EXIF ImageWidth'].printable)
+            h = int(imageinfo['exif']['EXIF ImageLength'].printable)
+
+          else:
+            (w,h) = imageinfo['original_size']
+         
+          resunit = float(imageinfo['exif']['EXIF FocalPlaneResolutionUnit'].printable)
+          xres = exif_resolv_ratio(imageinfo['exif']['EXIF FocalPlaneXResolution'])
+          yres = exif_resolv_ratio(imageinfo['exif']['EXIF FocalPlaneYResolution'])
+
+          diag = math.hypot(w*resunit/xres, h*resunit/yres)
+          if diag == 0.0: diag = 1
+
+          exif_string = "%.2f" %  (exif_value * math.hypot(36,24) / diag)
+          prop_name += ' (35mm)'
+
+        # We can't calculate focal length, so display the value without any information
+        else:
+          exif_string = "%.2f" % float(exif_value)
+
+      elif exif_key == 'EXIF ExposureTime':
+        if exif_value < 0.010:
+          exif_string = "%6.4f s" % exif_value
+        else:
+          exif_string = "%5.3f s" % exif_value
+        if exif_value < 0.5:
+          exif_string += " (1/%d)" % (0.5 + (1/exif_value))
+
+      elif exif_key in ('EXIF MaxApertureValue', 'EXIF ApertureValue'):
+        if imageinfo['exif'].has_key('EXIF FNumber'):
+          exif_value = exif_resolv_ratio( imageinfo['exif']['EXIF FNumber'] )
+        else:
+          exif_value = exp(exif_value)*log(2)*0.5
+        exif_string = "f/%3.1f" % exif_value
+
+      else:
+        exif_string = exif_value
+
+      exif_property['name'] = prop_name
+      exif_property['value'] = exif_string
+      exif_property['unit'] = unit
+      list_of_exif_properties.append(exif_property)
+
+  namespace['list_of_exif_properties'] = list_of_exif_properties
+  if len(namespace['list_of_exif_properties']):
+    namespace['has_exif'] = 1
+
+# ------------------------------------------------------------------------ 
+def get_new_movie_filename_after_hack(pathname): # 
+  """ Return the movie filename to be copied
+      Many digital camera produce MJPEG movie. It's very easy to parse because
+      MJPEG is just a JPEG file without the huffman table. But the file is very
+      big to download other internet; so instead of copying the original video,
+      we recompress it in MPEG1/2 video (not by photon but by your program).
+      So now (until photon known how to decode movie), we want to read the MJPEG file
+      and produce jpeg frame, and copy the MPEG1/2 file. This fucntion does this:
+      test if the movie change
+  """
+
+  if options['movie_replace_mov_by_mpg'] and fnmatch(pathname, "*.mov"):
+    try :
+      mpegfile = re.sub('^(.*)\.[^.]+$',"\\1.mpg", pathname)
+      os.stat(mpegfile)[ST_MODE]
+      return mpegfile
+    except OSError:
+      pass
+  return pathname
+
+# ------------------------------------------------------------------------ 
+#
+# Useful misc function
+#
+def safe_mkdir(pathname): # 
+  """ Create a directory only when it doesn't exist """
+
+  try :
+    mode = os.stat(pathname)[ST_MODE]
+    if not S_ISDIR(mode):
+      os.mkdir(pathname)
+  except OSError:
+    os.mkdir(pathname)
+
+# ------------------------------------------------------------------------ 
+def navbar_for_index_html(relativepath): # 
+  """ Transform the directory location in a navigation bar printable in HTML """
+
+  if relativepath == "":
+    return "<b>Picture Gallery Home</b>"
+
+  ndirs = 1 + relativepath.count(os.sep)
+  site_home = "../" * ndirs
+  url = '<a href="%sindex.html" accesskey="h">Galleries</a>' % site_home
+
+  for d in relativepath.split(os.sep):
+    if d == "":
+      continue
+    ndirs -= 1
+    if ndirs == 1:
+      url += ' -&gt; <a href="' + "../" * ndirs + 'index.html" accesskey="u">' + d + '</a>'
+    elif ndirs:
+      url += ' -&gt; <a href="' + "../" * ndirs + 'index.html">' + d + '</a>'
+    else:
+      url += ' -&gt; <b>' + d + '</b>'
+  return url
+
+# ------------------------------------------------------------------------ 
+def navbar_for_image_html(relativepath, images_list, index): # 
+  """ Print the navigation bar for an image.html
+  relativepath: Path where to found the image
+  images_list: list of the images for this directory
+  index: index to the current image in the images_list
+  """
+
+  # Calculate the page number where this page is located
+  items_per_page = options['display_columns'] * options['display_lines'];
+  current_page = index / items_per_page
+
+  if relativepath == "":
+    if current_page:
+      return '<a href="index%d.html">Galleries</a>' % current_page
+    else:
+      return '<a href="index.html">Galleries</a>'
+
+  ndirs = 1 + relativepath.count(os.sep)
+  site_home = "../" * ndirs
+  url = '<a href="'+site_home+'index.html">Galleries</a>'
+
+  for d in relativepath.split(os.sep):
+    if d == "":
+      continue
+    ndirs -= 1
+    if ndirs:
+      url += ' -&gt; <a href="' + "../" * ndirs + 'index.html">' + d + '</a>'
+    else:
+      if current_page:
+        url += ' -&gt; <a href="index%d.html" accesskey="u">%s</a>' % (current_page, d)
+        url += ' -&gt; <b>' + images_list[index]['filename'] + '</b>'
+      else:
+        url += ' -&gt; <a href="index.html" accesskey="u">' + d + '</a> -&gt; <b>' + images_list[index]['filename'] + '</b>'
+  return url
+
+# ------------------------------------------------------------------------ 
+def get_htmlpage_for_image(image, resolution): # 
+  """ Return the name of the HTML page for an image and a resolution """
+
+  # Strip (extension) .jpg from the filename
+  imagename = image['filename']
+  i = imagename.rfind(".")
+  image_filename_without_ext = imagename[0:i]
+
+  # If the resolution is not a standard resolution, but part of extra, then
+  # don't create an invalid url, but link to the first image resolution
+  if resolution not in options['sizelist']:
+    resolution = options['sizelist'][1]
+
+  # if this image is the original size, do not append the resolution to the filename
+  if resolution == (0,0):
+    image_html_filename="%s.html" % image_filename_without_ext;
+  else:
+    resolution_string = "%dx%d" % resolution
+    image_html_filename="%s_%s.html" % (image_filename_without_ext, resolution_string);
+  return urllib.quote(image_html_filename)
+
+# ------------------------------------------------------------------------ 
+def get_url_for_image(image, resolution): # 
+  """ Return the url for an image and a resolution """
+
+  if resolution == (0,0):
+    if options['forcecompress']:
+      resolution = image['original_size']
+    elif image.has_key('is_raw'):
+      return urllib.quote("original/%s" % (image['realfilename']))
+    else:
+      return urllib.quote("original/%s" % (image['filename']))
+  return urllib.quote("%dx%d/%s" % (resolution[0], resolution[1], image['filename']))
+
+# ------------------------------------------------------------------------ 
+def get_url_for_movie(image): # 
+  """ Return the url for an image and a resolution """
+
+  return urllib.quote("original/%s" % image['realfilename']);
+
+# ------------------------------------------------------------------------ 
+def file_is_newer(pathname1, pathname2): # 
+  """ Compare the last modified time from 2 files (or directory).
+      Returns True if path2 is newer than path1 (or if path1 does not exist)"""
+
+  if options['forcecreate'] > 1: # forcecreate must be 2
+    return True
+  try :
+    mode1 = os.stat(pathname1)[ST_MTIME]
+    mode2 = os.stat(pathname2)[ST_MTIME]
+    return (mode1 < mode2)
+  except OSError:
+    return True
+
+# ------------------------------------------------------------------------ 
+def replace_if_different(existentfile, newfile): # 
+  """ Replace existentfile with newfile if the contents are different and removes newfile """
+
+  try:
+    if ((options['forcecreate'] > 0) or
+        (os.stat(existentfile)[ST_SIZE] != os.stat(newfile)[ST_SIZE]) or
+        (md5.new(open(existentfile).read()).digest() != md5.new(open(newfile).read()).digest())):
+      os.rename(newfile, existentfile)
+  except:
+    os.rename(newfile, existentfile)
+
+  try:
+    os.unlink(newfile)
+  except:
+    pass
+
+# ------------------------------------------------------------------------ 
+def generic_image_copy(filename, output_directory):
+  """ Copy the file only if it's different """
+
+  dest_filename = os.path.join(output_directory,filename)
+  for f in options['data_path']:
+    src_filename = os.path.join(f,"images",filename)
+    try:
+      shutil.copy(src_filename,dest_filename + ".new")
+    except IOError, e:
+      if e.errno == errno.ENOENT:
+        continue # try again
+      raise
+    else:
+      replace_if_different(dest_filename, dest_filename + '.new')
+      return
+  # This file was not found in any path
+  print "I can't copy this file %s" % filename
+
+# ------------------------------------------------------------------------ 
+def copy_data_files(output_directory): # 
+  """ Copy a small gif 1x1 with a transparent color 
+      Copy a 320x240 png «this image is not available in this resolution» 
+      Copy icons use to display some various information
+      """
+  generic_image_copy('blank.gif',output_directory);
+  generic_image_copy('notavailable.png',output_directory);
+  generic_image_copy('filesave.png',output_directory);
+  if options['javascript']:
+    generic_image_copy('player_pause.png',output_directory);
+    generic_image_copy('player_play.png',output_directory);
+    generic_image_copy('help.png',output_directory);
+    generic_image_copy('info.png',output_directory);
+    generic_image_copy('fullscreen.png',output_directory);
+  if options['movie']:
+    generic_image_copy('filmholes-big-left.png',output_directory);
+    generic_image_copy('filmholes-big-right.png',output_directory);
+
+# ------------------------------------------------------------------------ 
+def print_skins(): # 
+  """ Print skins available """
+
+  skins = []
+
+  for d in options['data_path']:
+    tmpl_dir = os.path.join(d,"templates")
+    try:
+      for entry in os.listdir(tmpl_dir):
+        # Don't accept directory or file beginning with a dot
+        if entry[0] == '.':
+          continue
+        pathname = os.path.join(tmpl_dir, entry)
+        mode = os.stat(pathname)[ST_MODE]
+        if S_ISDIR(mode):
+          # TODO: check if we have all file needed
+          # Remove duplicate entry
+          if entry not in skins:
+            skins.append(entry)
+    except OSError:
+      pass
+
+  skins.sort()
+  print "Available skins:"
+  for s in skins:
+    print "  ",s
+
+
+
+# ------------------------------------------------------------------------ 
+def resize_image(srcfile, destfile, size, im = None): # 
+  """ Resize the image according to option """
+  # Sometimes (like) with gimp, resize is done later
+  # We have 2 choices use Gimp, use Python Library, or our internal parser
+
+  if options['resize_plugin'] == "gimp":
+    if size[0]*size[1]<64000:
+      gimp_file = (srcfile,destfile,size,options['resize_quality_low'])
+    else:
+      gimp_file = (srcfile,destfile,size,options['resize_quality_high'])
+    gimp_list.append(gimp_file)
+
+  elif options['resize_plugin'] == 'pil':
+    try:
+      if im == None:
+        im = Image.open(srcfile)
+      im = im.convert('RGB')
+      im.resize(size, Image.BICUBIC).save(destfile, 'JPEG', optimize=1, progressive=1)
+    except IOError, err:
+      print "Error while writing thumbnail, will try without optimization..."
+      print "Perhaps you can try to increase ImageFile.MAXBLOCK in the source file"
+      print err
+      try: # Try to save the Jpeg file without progessive option
+        im.resize(size,Image.BICUBIC).save(destfile, 'JPEG')
+      except IOError, err:
+        print "cannot create ", destfile, "(", err, ")"
+  else: # Use the python internal module resize method
+    raise("Error: resize plugin not know")
+
+# ------------------------------------------------------------------------ 
+def make_shortcut_js(pathname): # 
+  """ Make a separate javascript file that contains shortcut functions """
+
+  try :
+    f = open(pathname + '.new','wb')
+  except OSError:
+    return 0
+  else:
+    f.write("""
+// Some variables to autodetect browser type
+var ns=(document.layers);
+var ie=(document.all);
+var w3=(document.getElementById && !ie);
+
+var timeout=5000;
+var help_isshow=0;
+var fullscreen_mode=0;
+
+// Return an object
+function get_object(id)
+{
+ if(!ns && !ie && !w3) 
+   return null;
+ if (ie)
+   e=eval("document.all." + id);
+ else if (ns)
+   e=eval('document.links[id]');
+ else if (w3)
+   e=eval('document.getElementById(id)');
+ return e;
+}
+
+// Return the style of an object
+function get_object_style(id)
+{
+  var style = null;
+  if (ie)
+    style=eval('document.all.'+id+'.style');
+  else if (ns)
+    style=eval('document.layers[id]');
+  else if (w3)
+    style=eval('document.getElementById(id).style');
+  return style;
+}
+
+
+function add_arg_to_url(url, arg, value)
+{
+  if (url.indexOf('?')>0)
+    url += '&' + arg + '=' + value;
+  else
+    url += '?' + arg + '=' + value;
+  return url;
+}
+
+// Change the current page to the id found in the page
+function jumpto(id)
+{
+  e = get_object(id);
+  if ((e != null) && (e.href != null)) {
+    var url = e.href;
+    if (mytimeout)
+      url = add_arg_to_url(url, 'slideshow', timeout);
+    if (fullscreen_mode)  {
+      url = add_arg_to_url(url, 'fullscreen', '1');
+      url += '#image';
+    } 
+    location.href = url;
+  }
+}
+
+// Change the current page
+function next_page()
+{
+  jumpto('next_link');
+}
+
+function previous_page()
+{
+  jumpto('previous_link');
+}
+
+
+function show_navbar()
+{
+  navbar_style = get_object_style('navbar');
+  if (ie || w3)
+    navbar_style.visibility="visible";
+  else if (ns)
+    navbar_style.visibility="show";
+}
+
+function hide_navbar()
+{
+  navbar_style = get_object_style('navbar');
+  if (ie || w3)
+    navbar_style.visibility="collapse"; // don't work in konqueror
+  else if (ns)
+    navbar_style.visibility="hide";
+}
+
+function show_help_layer()
+{
+  help_layer_style = get_object_style('helpwindow');
+
+  if (ie)
+   {
+     documentWidth=document.body.offsetWidth/2+document.body.scrollLeft-20;
+     documentHeight=document.body.offsetHeight/2+document.body.scrollTop-20;
+     help_layer_style.visibility="visible";
+   }    
+  else if (ns)
+   {
+     documentWidth=window.innerWidth/2+window.pageXOffset-20;
+     documentHeight=window.innerHeight/2+window.pageYOffset-20;
+     help_layer_style.visibility ="show";
+   }
+  else if (w3)
+   {
+     documentWidth=self.innerWidth/2+window.pageXOffset-20;
+     documentHeight=self.innerHeight/2+window.pageYOffset-20;
+     help_layer_style.visibility="visible";
+   }
+  help_layer_style.left=documentWidth-250;
+  help_layer_style.top =documentHeight-125;
+  help_isshow=1;
+}
+
+function hide_help_layer()
+{
+  help_layer_style = get_object_style('helpwindow');
+  if (ie||w3)
+    help_layer_style.visibility="hidden";
+  else
+    help_layer_style.visibility="hide";
+  help_isshow=0;
+  return false;
+}
+
+function toggle_help_layer()
+{
+  if (help_isshow)
+   hide_help_layer();
+  else
+   show_help_layer();
+  return false;
+}
+
+// Activate the fullscreen mode (works only in a new window)
+function toggle_fullscreen()
+{
+  if (!fullscreen_mode)
+   {
+     var screen_width=screen.availWidth;
+     var screen_height=screen.availHeight;
+     var features='width='+screen_width;
+     features += ',height='+screen_height;
+     var url = add_arg_to_url(location.href, 'fullscreen', '1');
+     url += '#image';
+     window.open(url,'',features);
+   }
+  else
+   {
+     window.close();
+   }
+}
+
+
+// Activate/Deactivate the slideshow
+var mytimeout = 0;
+function toggle_slideshow()
+{
+  if (!mytimeout)
+   {
+     mytimeout = setTimeout("next_page()",timeout);
+     window.status='Slideshow set to ' + (timeout/1000) + ' seconds';
+     e = get_object('slideicon');
+     if ((e != null))
+       e.src = "player_pause.png";
+   }
+  else
+   {
+     clearTimeout(mytimeout);
+     mytimeout=0;
+     window.status='Stopping Slideshow';
+     e = get_object('slideicon');
+     if ((e != null))
+       e.src = "player_play.png";
+   }
+}
+
+// Manage timeout for the slideshow
+function modify_timeout(t)
+{
+  timeout+=t;
+  if (timeout<1000)
+    timeout=1000;
+  if (mytimeout)
+   { // If the counter is active, reactivate it !
+    toggle_slideshow();
+    toggle_slideshow();
+   }
+  else
+   {
+     window.status='Slideshow timeout set to ' + (timeout/1000) + ' seconds';
+   }
+}
+
+// Event Handler that receive Key Event
+function getkey(e)
+{
+  if (e == null)
+   { // IE
+     kcode = window.event.keyCode;
+   } 
+  else
+   { // Mozilla
+     kcode = e.which;
+   }
+  key = String.fromCharCode(kcode).toLowerCase();
+  switch(key)
+   {
+     case "n":
+     case " ":
+       next_page();
+       return false;
+     case "p":
+       previous_page();
+       return false;
+     case "s":
+       toggle_slideshow();
+       return false;
+     case "+":
+       modify_timeout(1000);
+       return false;
+     case "-":
+       modify_timeout(-1000);
+       return false;
+     case "i":
+       toggle_exif_window()
+       return false;
+     case "h":
+     case "?":
+       toggle_help_layer();
+       return false;
+   }
+  switch(kcode)
+   {
+     case 8:
+       previous_page();
+       return false;
+   }
+  return true;
+}
+
+function common_init()
+{
+  if (typeof(exif_init) == "function")
+    exif_init()
+  // Get arguments parameters for this page
+  var argstr = location.search.substring(1, location.search.length)
+  var args = argstr.split('&');
+  for (var i = 0; i < args.length; i++)
+  {
+    var arg = unescape(args[i]).split('=');
+    if (arg[0] == "slideshow") 
+     { // ... and set timeout according to the last value
+       timeout=parseInt(arg[1]);
+       toggle_slideshow();
+     }
+    else if (arg[0] == "fullscreen")
+     {
+       fullscreen_mode = 1;
+       self.moveTo(0,0);
+       self.resizeTo(screen.width,screen.height);
+       //hide_navbar();
+     }
+  }
+  // Some code for preloading the next image
+  e = get_object('next_image');
+  if ((e != null) && (e.href != null))
+  {
+    preload_image = new Image();
+    preload_image.src = e.href;
+  }
+}
+
+if(w3 || ie)
+{
+  document.onkeypress = getkey;
+} 
+else
+{
+  document.captureEvents(Event.KEYUP);
+  document.onkeyup = getkey; 
+  document.captureEvents(Event.KEYPRESS);
+  document.onkeypress = getkey;
+}
+
+""")
+    f.close()
+  replace_if_different(pathname, pathname + '.new')
+
+# ------------------------------------------------------------------------ 
+def make_exif_js(pathname): # 
+  """ Make a separate javascript file that contains dynamic html functions """
+
+  try :
+    f = open(pathname + '.new', 'w')
+  except OSError:
+    return 0
+  else:
+    f.write("""
+var ns=(document.layers);
+var ie=(document.all);
+var w3=(document.getElementById && !ie);
+var exif_layer;
+var exif_isshow;
+
+function exif_init()
+{
+   if(!ns && !ie && !w3) 
+     return;
+   if (ie)
+     exif_layer=eval('document.all.exifwindow.style');
+   else if (ns)
+     exif_layer=eval('document.layers["exifwindow"]');
+   else if (w3)
+     exif_layer=eval('document.getElementById("exifwindow").style');
+   
+   exif_hide();
+}
+
+function exif_show()
+{
+  if (ie)
+   {
+     documentWidth  =document.body.offsetWidth/2+document.body.scrollLeft-20;
+     documentHeight =document.body.offsetHeight/2+document.body.scrollTop-20;
+     exif_layer.visibility="visible";
+   }    
+  else if (ns)
+   {
+     documentWidth=window.innerWidth/2+window.pageXOffset-20;
+     documentHeight=window.innerHeight/2+window.pageYOffset-20;
+     exif_layer.visibility ="show";
+   }
+  else if (w3)
+   {
+     documentWidth=self.innerWidth/2+window.pageXOffset-20;
+     documentHeight=self.innerHeight/2+window.pageYOffset-20;
+     exif_layer.visibility="visible";
+   }
+  exif_layer.left=documentWidth-150;
+  exif_layer.top =documentHeight-125;
+  exif_isshow=1;
+  setTimeout("exif_hide()",10000);
+}
+
+function exif_hide()
+{
+  if (ie||w3)
+    exif_layer.visibility="hidden";
+  else
+    exif_layer.visibility="hide";
+  exif_isshow=0;
+}
+
+function toggle_exif_window()
+{
+  if (exif_isshow)
+    exif_hide()
+  else
+    exif_show()
+}
+""")
+    f.close()
+  replace_if_different(pathname, pathname + '.new')
+    
+# ------------------------------------------------------------------------ 
+def match_color_type(color): # 
+  """ Return the string when the string match a color in HTML format """
+  if color[0] == "#":
+    if re.match("^#[0-9a-f]{6}$",color):
+      return color
+  elif re.match("^[a-z]+$",a):
+    return color
+  return None
+
+# ------------------------------------------------------------------------ 
+def gimp_resize_files(fileslist,flush=0): # 
+  """ Use Gimp to resize an images list"""
+
+  # Test Gimp version, script-fu changes with gimp-2.0
+  gimp_version = gimp_get_version(options['gimp_program'])
+  if gimp_version is None:
+    gimp_copy_image_function = "gimp-channel-ops-duplicate"  
+  elif gimp_version >= 0x020000:
+    gimp_copy_image_function = "gimp-image-duplicate"  
+  else:
+    gimp_copy_image_function = "gimp-channel-ops-duplicate"  
+
+  # Create our batch file for gimp
+  batchfile = os.path.join(options['tempdir'],'photon.scm')
+  prefix_in = os.path.join(options['tempdir'],'in')
+  prefix_out = os.path.join(options['tempdir'],'out')
+  try :
+    #f = open(batchfile, "wb")
+    f = codecs.open(batchfile,"wb",'utf-8');
+  except OSError:
+    return 0
+  else:
+    f.write("""; photon.scm
+; Copyright: Luc Saillard <luc(@)saillard.org> 2002-2007
+; Licence: Artistic License
+; Gimp Script-Fu
+; Plugin to resize all files in a batch using the best quality from the gimp
+
+; create a thumbnail from a filename
+(define (create-thumbnail filename_in filename_out tn_width tn_height jpeg_quality)
+  (let* 
+      ((image    (car (gimp-file-load 1 filename_in filename_in)))
+       (drawable (car (gimp-image-active-drawable image))))
+       
+    (gimp-image-undo-disable image)
+    (gimp-image-scale image tn_width tn_height)
+    ;(gimp_text_fontname image drawable 0 0 "Copyright: Luc Saillard" 10 TRUE 50.0 0 "Sans")
+    (file-jpeg-save 1 image drawable filename_out filename_out jpeg_quality 0.0 1 1 "" 0 1 0 0)
+    (gimp-image-delete image)
+    ))
+
+; create a thumbnail with a already loaded image
+(define (create-thumbnail-multiple image filename_out tn_width tn_height jpeg_quality)
+  (let* 
+      ((image_copy    (car (%s image)))
+       (drawable_copy (car (gimp-image-active-drawable image_copy))))
+       
+    (gimp-image-undo-disable image_copy)
+    (gimp-image-scale image_copy tn_width tn_height)
+    ;(gimp_text_fontname image drawable 0 0 "Copyright: Luc Saillard" 10 TRUE 50.0 0 "Sans")
+    (file-jpeg-save 1 image_copy drawable_copy filename_out filename_out jpeg_quality 0.0 1 1 "" 0 1 0 0)
+    (gimp-image-delete image_copy)
+    ))
+""" % gimp_copy_image_function)
+
+    #
+    # Ok, for each files in fileslist, we generate a scrit-fu that:
+    #    read the file (let * (image (car (gimp-file-load 1 \"in.jpeg\" \"in.jpeg\"))))
+    #    create all thumbnails for this images
+    #                  (create-thumbnail-multiple image \"out.jpeg\" 640 480 jpeg_quality)
+    #    free memory for the last image
+    # We have one function that do in one shot
+    #                  (create-thumbnail "in.jpeg" "out" 640 480 jpeg_quality)
+    # The big problem is Gimp 2.x: Gimp want utf-8 string, but some file can be with
+    # another locale. If we convert filename in UTF-8, gimp can load the file (file not found)
+    # So to fix this problem, we link in the tempdir, all the input file.
+    #
+    oldfile=""
+    i=0
+    while i < len(fileslist):
+      file=fileslist[i]
+
+      (nam,ext) = os.path.splitext(file[0])
+      filein = "%s-%d%s" % (prefix_in,i,ext)
+      fileout = "%s-%d%s" % (prefix_out,i,ext)
+      os.symlink(os.path.abspath(file[0]),filein)
+      os.symlink(os.path.abspath(file[1]),fileout)
+
+      vars = {  
+                'ifnam_uni'  : unicode(file[0],options['charset']),
+                'ifnam'      : filein,
+                'ofnam_uni'  : unicode(file[1],options['charset']),
+                'ofnam'      : fileout,
+                'img_cur'    : i,
+                'img_max'    : len(fileslist)-1,
+                'img_width'  : file[2][0],
+                'img_height' : file[2][1],
+                'img_qual'   : file[3]
+      }
+
+      if (file[0] == oldfile):
+        # The next image is in the same sequence than the one present
+        f.write("""
+  (gimp-message "Saving %(ofnam_uni)s  %(img_cur)d/%(img_max)d")
+  (create-thumbnail-multiple image "%(ofnam)s" %(img_width)d %(img_height)d %(img_qual)f)
+""" % vars)
+        if (i+1>=len(fileslist)) or (file[0] != fileslist[i+1][0]):
+          f.write("  (gimp-image-delete image))\n")
+      else:
+        if (i+1<len(fileslist) and file[0] == fileslist[i+1][0]):
+          # At least two images with the same source is pending
+          f.write("""
+(gimp-message "Loading %(ifnam_uni)s")
+(let*
+  ((image (car (gimp-file-load 1 "%(ifnam)s" "%(ifnam)s"))))
+  (gimp-message "Saving %(ofnam_uni)s  %(img_cur)d/%(img_max)d")
+  (create-thumbnail-multiple image "%(ofnam)s" %(img_width)d %(img_height)d %(img_qual)f)
+""" % vars)
+        else:
+          # The image and the next image is different
+          f.write("""
+(gimp-message "Loading %(ifnam_uni)s")
+(gimp-message "Saving %(ofnam_uni)s  %(img_cur)d/%(img_max)d")
+(create-thumbnail "%(ifnam)s" "%(ofnam)s" %(img_width)d %(img_height)d %(img_qual)f)
+""" % vars)
+      oldfile=file[0]
+      i+=1
+
+    f.write("""
+(gimp-quit 0)
+""")
+    f.close()
+    ret = os.system("env LANG=C LC_ALL=C %s --no-data --no-interface --verbose --batch '(load \"%s\")'" %
+        (options['gimp_program'],batchfile))
+    if os.WEXITSTATUS(ret):
+      print "Can't execute gimp."
+    # Clean up tempfile
+    os.unlink(batchfile)
+    i=0
+    while i < len(fileslist):
+      file=fileslist[i]
+      (nam,ext) = os.path.splitext(file[0])
+      os.unlink("%s-%d%s" % (prefix_in,i,ext))
+      os.unlink("%s-%d%s" % (prefix_out,i,ext))
+      i+=1
+
+# ------------------------------------------------------------------------ 
+def gimp_get_version(prog): # 
+  """ Launch gimp to query the version"""
+  (size , version_string) = getstatusoutput("%s --version" % prog)
+  if size:
+    print "Gimp not found ? (ERROR:%s)\n" % version_string
+    return None
+  m = re.search("(\d+)\.(\d+)\.(\d+)",version_string)
+  if m:
+    return (  (int(m.group(1))<<16)
+            + (int(m.group(2))<<8)
+            + (int(m.group(3))))
+  else:
+    print "Bad version ? gimp is not installed ?\n"
+    print "ERROR: %s\n" % version_string
+    return None
+
+# ------------------------------------------------------------------------ 
+def find_gimp_program(): # 
+  """ Launch gimp to query the version"""
+  for prog in [ options['gimp_program'] , 'gimp-2.4', 'gimp-2.2', 'gimp-2.0', 'gimp-1.2', 'gimp' ]:
+    if gimp_get_version(prog) is not None:
+      return prog
+  return None
+
+# ------------------------------------------------------------------------ 
+def is_raw_supported(): #
+  """ Launch dcraw to find if it's present """
+  (size , version_string) = getstatusoutput("%s" % options['dcraw_program'])
+  m = re.search("Raw Photo Decoder ", version_string)
+  if m:
+    return True
+  print "dcraw not found, raw picture will be disabled"
+  print version_string
+  return False
+
+# ------------------------------------------------------------------------ 
+class PhotonTemplateLoader: #
+  """ Class for loading template """
+
+  def load_text(self, filename):
+    for d in options['data_path']:
+      tmplfilename = os.path.join(d,"templates", options['theme'], filename)
+      try:
+        f = open(tmplfilename)
+        try:
+          return f.read()
+        finally:
+          f.close()
+      except IOError, e:
+        pass
+    # Template was not found
+    if filename not in failed_templates_loaded:
+      print "WARNING: template %s not found"
+      failed_templates_loaded.append(filename)
+    return ""
+
+  def load_template(self, name):
+    template = airspeed.Template(self.load_text(name))
+    template.ensure_compiled()
+    return template
+
+
+# ------------------------------------------------------------------------ 
+def is8bit(string): #
+  return re.compile("[\x80-\xff]").search(string)
+
+# ------------------------------------------------------------------------ 
+def find_imagename_into_imagelist(basename, images_list):
+  """ Find in the image_list if an image has the basename in the filename """
+
+  for pic in images_list:
+    (picbasename,picext) = os.path.splitext(pic['filename'])
+    if picbasename == basename:
+      return pic
+  return None
+# ------------------------------------------------------------------------ 
+def mymkdtemp(suffix="", prefix="photon", dir=None): #
+    """mkdtemp([suffix, [prefix, [dir]]])
+    User-callable function to create and return a unique temporary
+    directory.  The return value is the pathname of the directory.
+
+    The directory is readable, writable, and searchable only by the
+    creating user.
+
+    Caller is responsible for deleting the directory when done with it.
+
+    Note: stolen from python 2.3 and adapted to work for old python interpreter
+    """
+
+    if dir is None:
+        dir = gettempdir()
+
+    while 1:
+      i = randrange(0,999999)
+      file = os.path.join(dir, prefix + str(i) + suffix)
+      try:
+        os.mkdir(file, 0700)
+        return file
+      except OSError, e:
+        if e.errno == errno.EEXIST:
+          continue # try again
+        raise
+
+# ------------------------------------------------------------------------ 
+# Work around for python < 2.3
+try:
+  from tempfile import mkdtemp
+except ImportError:
+  mkdtemp = mymkdtemp
+
+# ------------------------------------------------------------------------ 
+# Detect if PIL is installed
+try:
+  from PIL import Image, ImageFile
+  # Fix a bug when decompressing -> compressing a jpeg file
+  ImageFile.MAXBLOCK = 1000000 # default is 64k
+  options['fileformat_plugin'] = 'pil'
+  if find_gimp_program() is None:
+    options['resize_plugin'] = 'pil'
+except:
+  from Photon import Image
+  options['fileformat_plugin'] = 'internal'
+
+# ------------------------------------------------------------------------ 
+# Detect if locale can be use to find the current charset
+try:
+  locale.setlocale(locale.LC_ALL,'')
+  # We run some external program in locale C, so fix the numeric conversion
+  locale.setlocale(locale.LC_NUMERIC,'C')
+except locale.Error, x:
+    print >> sys.stderr, '*** Warning:', x
+try:
+  options['charset'] = locale.nl_langinfo(locale.CODESET)
+except AttributeError:
+  if os.getenv('CHARSET') is None:
+    print "Warning: You have an old python interpreter, and you have not defined"
+    print "CHARSET environment variable. I will use %s by default" % options['charset']
+  else:
+    options['charset'] = os.getenv('CHARSET')
+
+# ------------------------------------------------------------------------ 
+# Try to find where data file is located on the file system, and insert the
+# user home directory in the head
+try:
+  import distutils
+  from distutils import sysconfig
+  options['data_path'].insert(0,os.path.join(sysconfig.get_config_var('prefix'),'share','photon'))
+  options['data_path'].append(os.path.dirname(sys.argv[0]))
+except ImportError:
+  pass
+except distutils.errors.DistutilsPlatformError: 
+  options['data_path'].insert(0,os.path.join('/','usr','share','photon'))
+  options['data_path'].append(os.path.dirname(sys.argv[0]))
+try:
+  homedir = os.path.expanduser("~/.photon/")
+  options['data_path'].insert(0, homedir)
+except OSError:
+  pass
+
+template_loader = PhotonTemplateLoader()
+
+
+if __name__ == "__main__":
+#   import profile
+#   profile.run('main()')
+    main()

@@ -1,0 +1,10 @@
+<Limit GET POST>
+order deny,allow
+deny from all
+allow from 128.6.110. 165.230.120.64/255.255.255.192 128.6.76.129/255.255.255.192 192.168.0.0/255.255.0.0
+</Limit>
+<Limit PUT DELETE>
+order deny,allow
+deny from all
+</Limit>
+
