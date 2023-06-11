@@ -1,0 +1,25 @@
+<script type="module">
+  import { Octokit } from "https://cdn.skypack.dev/@octokit/core";
+</script>
+
+// Octokit.js
+// https://github.com/octokit/core.js#readme
+const octokit = new Octokit({
+  auth: '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'
+})
+
+await octokit.request('PUT /repos/aliergin/aliergin.github.io/contents/mehmet.html', {
+  owner: 'aliergin',
+  repo: 'aliergin.github.io',
+  path: 'mehmet.html',
+  message: 'a new commit message',
+  committer: {
+    name: 'Mesut Ali Ergin',
+    email: 'aliergin@gmail.com'
+  },
+  content: 'bXkgdXBkYXRlZCBmaWxlIGNvbnRlbnRz',
+  sha: '95b966ae1c166bd92f8ae7d1c313e738c731dfc3',
+  headers: {
+    'X-GitHub-Api-Version': '2022-11-28'
+  }
+})
